@@ -15,7 +15,7 @@ Content Intelligence is a production-grade, commercial Craft CMS 5 plugin design
 * **Interactive SERP Preview**: Live desktop and mobile Google search snippet preview cards with character counters and truncation warnings.
 * **Automated Scoring (0–100)**: Transparent weighting and health badges (Good, Needs Review, Critical).
 
-### 🔵 Pro Edition ($79/yr)
+### 🔵 Pro Edition ($99/yr)
 * *Everything in Lite, plus:*
 * **AI Content Assistant (BYOK OpenAI)**: Bring Your Own Key architecture (supports `$OPENAI_API_KEY` in `.env`).
 * **Entry Editor Slideout**: Integrated seamlessly with Craft 5's native `Craft.Slideout` UI directly inside the entry sidebar.
@@ -26,7 +26,7 @@ Content Intelligence is a production-grade, commercial Craft CMS 5 plugin design
 * **Deep AI SEO Intelligence**: Single-pass semantic audit identifying search intent (informational, commercial, navigational, transactional), content depth gaps, semantic entities, and competitive differentiation opportunities.
 * **Strict Human-in-the-Loop**: All AI suggestions require explicit human approval and staging before being applied to Craft entries.
 
-### 🟣 Agency Edition ($149/yr)
+### 🟣 Agency Edition ($249/yr)
 * *Everything in Pro, plus:*
 * **Intelligent Heading-Aware Chunking**: Hierarchically partitions entry content into coherent ~400-word sections under document heading contexts.
 * **Incremental Hash-Based Indexing**: SHA-256 fingerprinting skips unchanged chunks during bulk scans (zero API cost and instant re-indexes).
