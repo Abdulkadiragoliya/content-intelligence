@@ -18,11 +18,11 @@
     "openai",
     "llm"
   ],
-  "homepage": "https://github.com/Abdulkadiragoliya/craft-content-intelligence",
+  "homepage": "https://github.com/Abdulkadiragoliya/content-intelligence",
   "support": {
     "email": "abdulkadir.agoliya@gmail.com",
-    "docs": "https://github.com/Abdulkadiragoliya/craft-content-intelligence#readme",
-    "issues": "https://github.com/Abdulkadiragoliya/craft-content-intelligence/issues"
+    "docs": "https://github.com/Abdulkadiragoliya/content-intelligence#readme",
+    "issues": "https://github.com/Abdulkadiragoliya/content-intelligence/issues"
   },
   "license": "proprietary",
   "authors": [
@@ -50,8 +50,8 @@
     "handle": "content-intelligence",
     "developer": "Abdulkadir Agoliya",
     "developerUrl": "https://github.com/Abdulkadiragoliya",
-    "documentationUrl": "https://github.com/Abdulkadiragoliya/craft-content-intelligence#readme",
-    "changelogUrl": "https://raw.githubusercontent.com/Abdulkadiragoliya/craft-content-intelligence/main/CHANGELOG.md",
+    "documentationUrl": "https://github.com/Abdulkadiragoliya/content-intelligence#readme",
+    "changelogUrl": "https://raw.githubusercontent.com/Abdulkadiragoliya/content-intelligence/main/CHANGELOG.md",
     "class": "abdulkadiragoliya\\contentintelligence\\Plugin"
   }
 }
