@@ -61,7 +61,8 @@ php craft plugin/install content-intelligence
 Add any of the following optional environment variables to your `.env` file:
 
 ```env
-# Plugin Edition: lite | pro | agency
+# Local Development Only: test different tiers (lite | pro | agency)
+# (In production, the edition is securely managed by your Craft Plugin Store license)
 CONTENT_INTELLIGENCE_EDITION=agency
 
 # OpenAI API Key (Pro & Agency)
@@ -199,8 +200,8 @@ Content Intelligence is architected from the ground up for **Craft Cloud** and c
 * **Categories**: Content Management, SEO, AI & Machine Learning
 * **Editions & Pricing**:
   * **Lite**: Free (Deterministic Content & SEO Audits, Scoring)
-  * **Pro**: $79 / year (BYOK AI Assistant, Native Slideout, SERP & SEO Intelligence)
-  * **Agency**: $149 / year (Qdrant Vector DB, Hybrid Search, "Ask Your Website" RAG, Agency CSV Export)
+  * **Pro**: $99 / year (BYOK AI Assistant, Native Slideout, SERP & SEO Intelligence)
+  * **Agency**: $249 / year (Qdrant Vector DB, Hybrid Search, "Ask Your Website" RAG, Agency CSV Export)
 
 ---
 

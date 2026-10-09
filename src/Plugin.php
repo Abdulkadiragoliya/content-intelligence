@@ -88,19 +88,27 @@ class Plugin extends BasePlugin
 
     /**
      * Get the active plugin edition.
+     * Enforces the Craft Plugin Store license in production while allowing
+     * local developers to test different editions via devMode or .env.
      */
     public function getActiveEdition(): string
     {
-        $override = App::env('CONTENT_INTELLIGENCE_EDITION');
-        if ($override && in_array(strtolower($override), [self::EDITION_LITE, self::EDITION_PRO, self::EDITION_AGENCY], true)) {
-            return strtolower($override);
-        }
-        if ($this->edition && $this->edition !== self::EDITION_LITE) {
-            return $this->edition;
-        }
-        if (Craft::$app->getConfig()->getGeneral()->devMode) {
+        $isDev = Craft::$app->getConfig()->getGeneral()->devMode
+            || in_array(App::env('CRAFT_ENVIRONMENT'), ['dev', 'local', 'test', 'testing', 'staging'], true);
+
+        // Allow .env override during local development & testing
+        if ($isDev) {
+            $override = App::env('CONTENT_INTELLIGENCE_EDITION');
+            if ($override && in_array(strtolower($override), [self::EDITION_LITE, self::EDITION_PRO, self::EDITION_AGENCY], true)) {
+                return strtolower($override);
+            }
+            if ($this->edition && $this->edition !== self::EDITION_LITE) {
+                return $this->edition;
+            }
             return self::EDITION_PRO;
         }
+
+        // On production, strictly enforce the purchased Craft Plugin Store license
         return $this->edition ?: self::EDITION_LITE;
     }
 
