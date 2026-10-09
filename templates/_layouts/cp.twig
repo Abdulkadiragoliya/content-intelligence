@@ -1,0 +1,27 @@
+{% extends "_layouts/cp" %}
+
+{% set title = title ?? "Content Intelligence"|t('content-intelligence') %}
+{% set selectedSubnavItem = selectedSubnavItem ?? 'dashboard' %}
+
+{% block content %}
+    <div class="ci-container">
+        <div class="ci-header">
+            <div class="ci-header-title">
+                <h1>
+                    {{ "Content Intelligence"|t('content-intelligence') }}
+                    <span class="ci-edition-badge ci-badge-{{ edition|default('lite') }}">
+                        {{ edition|default('lite')|upper }}
+                    </span>
+                </h1>
+                <div class="ci-header-subtitle">
+                    {{ "AI-powered Content & SEO Intelligence for Craft CMS"|t('content-intelligence') }}
+                </div>
+            </div>
+            <div class="ci-header-actions">
+                {% block pageActions %}{% endblock %}
+            </div>
+        </div>
+
+        {% block ciContent %}{% endblock %}
+    </div>
+{% endblock %}

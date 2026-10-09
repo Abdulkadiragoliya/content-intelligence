@@ -1,0 +1,5 @@
+# Git Export Ignore for Composer and Zip Archives
+/tests export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/scratch export-ignore

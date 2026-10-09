@@ -1,0 +1,118 @@
+{# Content Intelligence Sidebar Card for Entry Editor #}
+<div class="ci-sidebar-card field" style="margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1.25rem;">
+    <div class="heading" style="margin-bottom: 0.75rem;">
+        <label style="font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+            <span style="display: flex; align-items: center; gap: 0.4rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                    <path d="M12 12 2.1 10.5"></path>
+                    <path d="M12 12V2.1"></path>
+                </svg>
+                <span>{{ "Content Intelligence"|t('content-intelligence') }}</span>
+            </span>
+            {% if isPro %}
+                <span class="ci-badge-pro" style="font-size: 10px; padding: 2px 6px; border-radius: 9999px; background: #e0e7ff; color: #4338ca; font-weight: 600;">PRO</span>
+            {% else %}
+                <span style="font-size: 10px; padding: 2px 6px; border-radius: 9999px; background: #f1f5f9; color: #475569; font-weight: 600;">LITE</span>
+            {% endif %}
+        </label>
+    </div>
+
+    <!-- Scores Summary -->
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem; margin-bottom: 0.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-size: 12px; color: #64748b;">{{ "Content Score"|t('content-intelligence') }}</span>
+            {% set contentScore = audit ? (audit.contentScore ?? audit.score ?? null) : null %}
+            {% if contentScore is not null %}
+                {% if contentScore >= 80 %}
+                    <span style="font-size: 12px; font-weight: 700; color: #16a34a;">{{ contentScore }}/100</span>
+                {% elseif contentScore >= 50 %}
+                    <span style="font-size: 12px; font-weight: 700; color: #d97706;">{{ contentScore }}/100</span>
+                {% else %}
+                    <span style="font-size: 12px; font-weight: 700; color: #dc2626;">{{ contentScore }}/100</span>
+                {% endif %}
+            {% else %}
+                <span style="font-size: 11px; color: #94a3b8;">{{ "Not Audited"|t('content-intelligence') }}</span>
+            {% endif %}
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; color: #64748b;">{{ "SEO Score"|t('content-intelligence') }}</span>
+            {% set seoScore = audit ? audit.seoScore : null %}
+            {% if seoScore is not null %}
+                {% if seoScore >= 80 %}
+                    <span style="font-size: 12px; font-weight: 700; color: #16a34a;">{{ seoScore }}/100</span>
+                {% elseif seoScore >= 50 %}
+                    <span style="font-size: 12px; font-weight: 700; color: #d97706;">{{ seoScore }}/100</span>
+                {% else %}
+                    <span style="font-size: 12px; font-weight: 700; color: #dc2626;">{{ seoScore }}/100</span>
+                {% endif %}
+            {% else %}
+                <span style="font-size: 11px; color: #94a3b8;">{{ "Not Audited"|t('content-intelligence') }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        {% if isPro %}
+            <button type="button" class="btn submit fullwidth ci-open-ai-slideout" data-entry-id="{{ entry.id }}" data-site-id="{{ entry.siteId }}" style="display: flex; align-items: center; justify-content: center; gap: 0.4rem; background: #6366f1; border-color: #6366f1; color: #fff;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"></path>
+                </svg>
+                <span>{{ "Open AI Assistant"|t('content-intelligence') }}</span>
+            </button>
+        {% else %}
+            <a href="{{ cpUrl('content-intelligence/ai') }}" class="btn fullwidth" style="text-align: center;">
+                {{ "AI Assistant (Pro)"|t('content-intelligence') }}
+            </a>
+        {% endif %}
+
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{{ cpUrl('content-intelligence/seo/' ~ entry.id) }}" class="btn small fullwidth" style="text-align: center; font-size: 11px;">
+                {{ "SEO Analysis"|t('content-intelligence') }}
+            </a>
+            <a href="{{ cpUrl('content-intelligence/audit/' ~ entry.id) }}" class="btn small fullwidth" style="text-align: center; font-size: 11px;">
+                {{ "Audit Report"|t('content-intelligence') }}
+            </a>
+        </div>
+    </div>
+</div>
+
+{% js %}
+$(document).off('click.ci_open_ai').on('click.ci_open_ai', '.ci-open-ai-slideout', function(e) {
+    e.preventDefault();
+    var $btn = $(this);
+    if ($btn.hasClass('loading') || $btn.prop('disabled')) {
+        return;
+    }
+
+    var entryId = $('input[name="draftId"]').val() || $('input[name="entryId"]').val() || $btn.attr('data-entry-id') || $btn.data('entry-id');
+    var siteId = $('input[name="siteId"]').val() || $btn.attr('data-site-id') || $btn.data('site-id') || {{ entry.siteId }};
+    var slideoutUrl = Craft.getUrl('content-intelligence/ai/modal/' + entryId, { siteId: siteId });
+
+    $btn.addClass('loading');
+
+    $.ajax({
+        url: slideoutUrl,
+        type: 'GET',
+        dataType: 'html',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(html) {
+            $btn.removeClass('loading');
+            var slideout = new Craft.Slideout(html, {
+                containerAttributes: {
+                    class: 'ci-slideout-container',
+                    style: 'width: 820px; max-width: 95vw;'
+                }
+            });
+            Craft.initUiElements(slideout.$container);
+        },
+        error: function(xhr, status, error) {
+            $btn.removeClass('loading');
+            Craft.cp.displayError(Craft.t('content-intelligence', 'Failed to load AI Assistant.'));
+        }
+    });
+});
+{% endjs %}

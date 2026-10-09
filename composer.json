@@ -1,0 +1,57 @@
+{
+  "name": "abdulkadiragoliya/content-intelligence",
+  "description": "AI-powered Content & SEO Intelligence for Craft CMS. Audits, scoring, semantic search, and RAG knowledge assistant.",
+  "type": "craft-plugin",
+  "keywords": [
+    "craft",
+    "cms",
+    "craftcms",
+    "craft-plugin",
+    "content",
+    "seo",
+    "ai",
+    "content-audit",
+    "seo-audit",
+    "rag",
+    "semantic-search",
+    "qdrant",
+    "openai",
+    "llm"
+  ],
+  "homepage": "https://github.com/Abdulkadiragoliya/craft-content-intelligence",
+  "support": {
+    "email": "abdulkadir.agoliya@gmail.com",
+    "docs": "https://github.com/Abdulkadiragoliya/craft-content-intelligence#readme",
+    "issues": "https://github.com/Abdulkadiragoliya/craft-content-intelligence/issues"
+  },
+  "license": "proprietary",
+  "authors": [
+    {
+      "name": "Abdulkadir Agoliya",
+      "homepage": "https://github.com/Abdulkadiragoliya"
+    }
+  ],
+  "require": {
+    "php": "^8.2.0",
+    "craftcms/cms": "^5.0.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "abdulkadiragoliya\\contentintelligence\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "abdulkadiragoliya\\contentintelligencetests\\": "tests/"
+    }
+  },
+  "extra": {
+    "name": "Content Intelligence",
+    "handle": "content-intelligence",
+    "developer": "Abdulkadir Agoliya",
+    "developerUrl": "https://github.com/Abdulkadiragoliya",
+    "documentationUrl": "https://github.com/Abdulkadiragoliya/craft-content-intelligence#readme",
+    "changelogUrl": "https://raw.githubusercontent.com/Abdulkadiragoliya/craft-content-intelligence/main/CHANGELOG.md",
+    "class": "abdulkadiragoliya\\contentintelligence\\Plugin"
+  }
+}

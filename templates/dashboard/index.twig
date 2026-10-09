@@ -1,0 +1,142 @@
+{% extends "content-intelligence/_layouts/cp" %}
+
+{% set title = "Content Intelligence Dashboard"|t('content-intelligence') %}
+{% set selectedSubnavItem = 'dashboard' %}
+
+{% block pageActions %}
+    <a href="{{ cpUrl('content-intelligence/audit') }}" class="btn submit">
+        {{ "Run Content Audit"|t('content-intelligence') }}
+    </a>
+{% endblock %}
+
+{% block ciContent %}
+    <!-- High-level KPI metrics -->
+    <div class="ci-stats-grid">
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Overall Content Health"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value ci-stat-score-good">
+                {{ stats.overallHealthScore }}/100
+            </div>
+            <div class="ci-stat-card-footer">{{ "Rules-based composite score"|t('content-intelligence') }}</div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "SEO Health Score"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value ci-stat-score-good">
+                {{ stats.avgSeoScore }}/100
+            </div>
+            <div class="ci-stat-card-footer">{{ "Title, meta, heading & alt audit"|t('content-intelligence') }}</div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Entries in Scope"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value">
+                {{ stats.totalEntries }}
+            </div>
+            <div class="ci-stat-card-footer">{{ currentSite.name }}</div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Active Issues"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value ci-stat-score-good">
+                {{ stats.criticalIssues + stats.warningIssues }}
+            </div>
+            <div class="ci-stat-card-footer">
+                <span class="ci-severity-badge ci-severity-critical">{{ stats.criticalIssues }} Critical</span>
+                <span class="ci-severity-badge ci-severity-warning">{{ stats.warningIssues }} Warnings</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Edition Overview -->
+    <div class="ci-panel">
+        <div class="ci-panel-header">
+            <h2>{{ "Intelligence Capabilities & Architecture"|t('content-intelligence') }}</h2>
+            <span class="ci-edition-badge ci-badge-{{ edition }}">{{ edition|upper }} EDITION</span>
+        </div>
+        <div class="ci-panel-body">
+            <p style="margin-bottom: 1.5rem; color: #4b5563;">
+                {{ "Content Intelligence audits the quality, completeness, structure, and SEO readiness of your Craft CMS website. Designed with transparent deterministic rules in Lite, extensible BYOK AI in Pro, and Qdrant semantic RAG in Agency."|t('content-intelligence') }}
+            </p>
+
+            <table class="data fullwidth">
+                <thead>
+                    <tr>
+                        <th>{{ "Feature Module"|t('content-intelligence') }}</th>
+                        <th>{{ "Edition Availability"|t('content-intelligence') }}</th>
+                        <th>{{ "Status"|t('content-intelligence') }}</th>
+                        <th>{{ "Quick Action"|t('content-intelligence') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>{{ "Content Audit"|t('content-intelligence') }}</strong></td>
+                        <td>Lite, Pro, Agency</td>
+                        <td><span class="ci-severity-badge ci-severity-good">{{ "Active"|t('content-intelligence') }}</span></td>
+                        <td><a href="{{ cpUrl('content-intelligence/audit') }}">{{ "Inspect Content"|t('content-intelligence') }} &rarr;</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>{{ "SEO Intelligence"|t('content-intelligence') }}</strong></td>
+                        <td>Lite, Pro, Agency</td>
+                        <td><span class="ci-severity-badge ci-severity-good">{{ "Active"|t('content-intelligence') }}</span></td>
+                        <td><a href="{{ cpUrl('content-intelligence/seo') }}">{{ "Inspect SEO"|t('content-intelligence') }} &rarr;</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>{{ "AI Content Assistant"|t('content-intelligence') }}</strong></td>
+                        <td>Pro, Agency</td>
+                        <td>
+                            {% if hasPro %}
+                                <span class="ci-severity-badge ci-severity-good">{{ "Enabled"|t('content-intelligence') }}</span>
+                            {% else %}
+                                <span class="ci-severity-badge ci-severity-notice">{{ "Requires Pro"|t('content-intelligence') }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if hasPro %}
+                                <a href="{{ cpUrl('content-intelligence/ai') }}">{{ "Open Assistant"|t('content-intelligence') }} &rarr;</a>
+                            {% else %}
+                                <a href="https://plugins.craftcms.com" target="_blank" rel="noopener">{{ "Learn More"|t('content-intelligence') }} &rarr;</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>{{ "Semantic Search & Vector Store"|t('content-intelligence') }}</strong></td>
+                        <td>Agency</td>
+                        <td>
+                            {% if hasAgency %}
+                                <span class="ci-severity-badge ci-severity-good">{{ "Enabled"|t('content-intelligence') }}</span>
+                            {% else %}
+                                <span class="ci-severity-badge ci-severity-notice">{{ "Requires Agency"|t('content-intelligence') }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if hasAgency %}
+                                <a href="{{ cpUrl('content-intelligence/semantic') }}">{{ "Open Vector Index"|t('content-intelligence') }} &rarr;</a>
+                            {% else %}
+                                <a href="https://plugins.craftcms.com" target="_blank" rel="noopener">{{ "Learn More"|t('content-intelligence') }} &rarr;</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>{{ "Ask Your Website (RAG)"|t('content-intelligence') }}</strong></td>
+                        <td>Agency</td>
+                        <td>
+                            {% if hasAgency %}
+                                <span class="ci-severity-badge ci-severity-good">{{ "Enabled"|t('content-intelligence') }}</span>
+                            {% else %}
+                                <span class="ci-severity-badge ci-severity-notice">{{ "Requires Agency"|t('content-intelligence') }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if hasAgency %}
+                                <a href="{{ cpUrl('content-intelligence/rag') }}">{{ "Query Knowledge Base"|t('content-intelligence') }} &rarr;</a>
+                            {% else %}
+                                <a href="https://plugins.craftcms.com" target="_blank" rel="noopener">{{ "Learn More"|t('content-intelligence') }} &rarr;</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

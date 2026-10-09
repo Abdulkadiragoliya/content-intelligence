@@ -1,0 +1,110 @@
+{% extends "content-intelligence/_layouts/cp" %}
+
+{% set title = "Audit: " ~ entry.title %}
+{% set selectedSubnavItem = 'audit' %}
+
+{% block pageActions %}
+    <a href="{{ cpUrl('content-intelligence/audit') }}" class="btn">
+        &larr; {{ "Back to Audits"|t('content-intelligence') }}
+    </a>
+    <a href="{{ entry.cpEditUrl }}" target="_blank" rel="noopener" class="btn">
+        {{ "Edit Entry in Craft"|t('content-intelligence') }} &nearr;
+    </a>
+    <form method="post" action="{{ cpUrl('content-intelligence/audit/audit-entry/' ~ entry.id) }}" style="display: inline-block;">
+        {{ csrfInput() }}
+        {{ actionInput('content-intelligence/audit/audit-entry') }}
+        <input type="hidden" name="entryId" value="{{ entry.id }}">
+        {{ redirectInput('content-intelligence/audit/' ~ entry.id) }}
+        <button type="submit" class="btn submit">
+            {{ "Re-Audit Entry"|t('content-intelligence') }}
+        </button>
+    </form>
+{% endblock %}
+
+{% block ciContent %}
+    <!-- Entry Health Scorecard -->
+    <div class="ci-stats-grid">
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Content Score"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value {% if audit.contentScore >= 80 %}ci-stat-score-good{% elseif audit.contentScore >= 50 %}ci-stat-score-warning{% else %}ci-stat-score-danger{% endif %}">
+                {{ audit.contentScore }}/100
+            </div>
+            <div class="ci-stat-card-footer">{{ "Depth, completeness & structure"|t('content-intelligence') }}</div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "SEO Score"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value {% if audit.seoScore >= 80 %}ci-stat-score-good{% elseif audit.seoScore >= 50 %}ci-stat-score-warning{% else %}ci-stat-score-danger{% endif %}">
+                {{ audit.seoScore }}/100
+            </div>
+            <div class="ci-stat-card-footer">{{ "Metadata & accessibility"|t('content-intelligence') }}</div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Overall Score"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value {% if audit.overallScore >= 80 %}ci-stat-score-good{% elseif audit.overallScore >= 50 %}ci-stat-score-warning{% else %}ci-stat-score-danger{% endif %}">
+                {{ audit.overallScore }}/100
+            </div>
+            <div class="ci-stat-card-footer">{{ "Weighted composite health"|t('content-intelligence') }}</div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Rule Violations"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value">
+                {{ audit.criticalCount + audit.warningCount }}
+            </div>
+            <div class="ci-stat-card-footer">
+                <span class="ci-severity-badge ci-severity-critical">{{ audit.criticalCount }} Critical</span>
+                <span class="ci-severity-badge ci-severity-warning">{{ audit.warningCount }} Warning</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Findings by Rule -->
+    <div class="ci-panel">
+        <div class="ci-panel-header">
+            <h2>{{ "Detailed Audit Findings"|t('content-intelligence') }}</h2>
+            <span style="font-size: 0.85rem; color: #64748b;">
+                {{ "Last scanned"|t('content-intelligence') }}: {{ audit.dateUpdated|datetime('short') }}
+            </span>
+        </div>
+        <div class="ci-panel-body">
+            {% if results|length %}
+                <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                    {% for result in results %}
+                        <div style="border: 1px solid var(--gray-200, #e2e8f0); border-radius: 8px; padding: 1.25rem; background: {% if result.severity == 'critical' %}#fef2f2{% elseif result.severity == 'warning' %}#fffbeb{% elseif result.severity == 'notice' %}#f0f9ff{% else %}#f0fdf4{% endif %};">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <span class="ci-severity-badge ci-severity-{{ result.severity }}">
+                                        {{ result.severity|upper }}
+                                    </span>
+                                    <h3 style="margin: 0; font-size: 1.05rem; font-weight: 600; color: #1e293b;">
+                                        {{ result.title }}
+                                    </h3>
+                                </div>
+                                <span style="font-size: 0.8rem; color: #64748b; font-family: monospace;">
+                                    {{ result.ruleId }}
+                                </span>
+                            </div>
+
+                            <p style="margin: 0.5rem 0; color: #334155; font-size: 0.95rem;">
+                                {{ result.description }}
+                            </p>
+
+                            {% if result.recommendation %}
+                                <div style="margin-top: 0.75rem; padding: 0.75rem 1rem; background: rgba(255, 255, 255, 0.7); border-radius: 6px; border-left: 3px solid {% if result.severity == 'critical' %}#ef4444{% elseif result.severity == 'warning' %}#f59e0b{% else %}#10b981{% endif %};">
+                                    <strong style="color: #0f172a; font-size: 0.85rem;">{{ "Recommendation"|t('content-intelligence') }}:</strong>
+                                    <span style="color: #334155; font-size: 0.9rem; margin-left: 0.35rem;">{{ result.recommendation }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="notice">
+                    <p>{{ "No audit issues detected for this entry."|t('content-intelligence') }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

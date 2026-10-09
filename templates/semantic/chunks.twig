@@ -1,0 +1,104 @@
+{% extends "content-intelligence/_layouts/cp" %}
+
+{% set title = "Chunks Breakdown: " ~ entry.title %}
+{% set selectedSubnavItem = 'semantic' %}
+
+{% block pageActions %}
+    <a href="{{ cpUrl('content-intelligence/semantic') }}" class="btn">
+        &larr; {{ "Back to Knowledge Base"|t('content-intelligence') }}
+    </a>
+    <a href="{{ entry.cpEditUrl }}" target="_blank" rel="noopener" class="btn">
+        {{ "Edit Entry"|t('content-intelligence') }} &nearr;
+    </a>
+    <form method="post" action="{{ cpUrl('content-intelligence/semantic/index-entry/' ~ entry.id) }}" style="display: inline-block;">
+        {{ csrfInput() }}
+        {{ actionInput('content-intelligence/semantic/index-entry') }}
+        <input type="hidden" name="entryId" value="{{ entry.id }}">
+        {{ redirectInput('content-intelligence/semantic/chunks/' ~ entry.id) }}
+        <button type="submit" class="btn submit">
+            <span class="icon" data-icon="refresh"></span>
+            {{ "Re-index Entry"|t('content-intelligence') }}
+        </button>
+    </form>
+{% endblock %}
+
+{% block ciContent %}
+    <div class="ci-stats-grid">
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Total Chunks"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value ci-stat-score-good">
+                {{ chunks|length }}
+            </div>
+            <div class="ci-stat-card-footer">{{ "Heading-aware partitioned blocks"|t('content-intelligence') }}</div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Section"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value" style="font-size: 1.5rem;">
+                {{ entry.section.name ?? 'Single' }}
+            </div>
+            <div class="ci-stat-card-footer"><code>{{ entry.slug }}</code></div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Target Chunk Sizing"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value">
+                ~400 <span style="font-size: 1rem; color: #64748b;">words</span>
+            </div>
+            <div class="ci-stat-card-footer">{{ "40 words overlap window"|t('content-intelligence') }}</div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Hash Integrity"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value ci-stat-score-good" style="font-size: 1.5rem;">
+                SHA-256
+            </div>
+            <div class="ci-stat-card-footer">{{ "Cached embeddings on zero changes"|t('content-intelligence') }}</div>
+        </div>
+    </div>
+
+    <div class="ci-panel">
+        <div class="ci-panel-header">
+            <h2>{{ "Semantic Partitions & Metadata"|t('content-intelligence') }}</h2>
+            <span style="font-size: 0.85rem; color: #64748b;">{{ "Sorted sequentially by chunkIndex"|t('content-intelligence') }}</span>
+        </div>
+        <div class="ci-panel-body" style="padding: 0;">
+            {% if chunks|length == 0 %}
+                <div style="padding: 2rem; text-align: center; color: #64748b;">
+                    <p>{{ "No chunks found for this entry. Click 'Re-index Entry' above to generate chunks."|t('content-intelligence') }}</p>
+                </div>
+            {% else %}
+                <div style="display: flex; flex-direction: column;">
+                    {% for chunk in chunks %}
+                        {% set meta = chunk.getDecodedMetadata() %}
+                        <div style="padding: 1.5rem; border-bottom: 1px solid #e2e8f0; {% if loop.last %}border-bottom: none;{% endif %}">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <span class="badge" style="font-weight: 700; background: #0284c7; color: white;">#{{ chunk.chunkIndex }}</span>
+                                    <h3 style="margin: 0; font-size: 1.05rem; font-weight: 600; color: #1e293b;">
+                                        {{ meta.heading ?? entry.title }}
+                                    </h3>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <span class="ci-severity-badge ci-severity-notice">
+                                        {{ meta.wordCount ?? 0 }} {{ "words"|t('content-intelligence') }}
+                                    </span>
+                                    <span class="ci-severity-badge ci-severity-good" title="Content Hash: {{ chunk.contentHash }}">
+                                        SHA-256: <code>{{ chunk.contentHash|slice(0, 8) }}...</code>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1rem; margin-top: 0.5rem; font-size: 0.95rem; line-height: 1.6; color: #334155; white-space: pre-wrap;">{{ chunk.chunkText }}</div>
+
+                            <div style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8; display: flex; gap: 1.5rem;">
+                                <span><strong>{{ "Vector ID"|t('content-intelligence') }}:</strong> <code>{{ chunk.vectorId ?: 'local_db_hash' }}</code></span>
+                                <span><strong>{{ "Last Updated"|t('content-intelligence') }}:</strong> {{ chunk.dateUpdated ? chunk.dateUpdated|datetime('short') : '—' }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

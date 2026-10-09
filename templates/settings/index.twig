@@ -1,0 +1,250 @@
+{% extends "content-intelligence/_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = "Content Intelligence Settings"|t('content-intelligence') %}
+{% set selectedSubnavItem = 'settings' %}
+
+{% block ciContent %}
+<form method="post" accept-charset="UTF-8">
+    {{ csrfInput() }}
+    {{ actionInput('content-intelligence/settings/save') }}
+    {{ redirectInput('content-intelligence/settings') }}
+
+    <div class="ci-panel">
+        <div class="ci-panel-header">
+            <h2>{{ "General Audit Configuration"|t('content-intelligence') }}</h2>
+            <span class="ci-edition-badge ci-badge-lite">{{ "Lite / Pro / Agency"|t('content-intelligence') }}</span>
+        </div>
+        <div class="ci-panel-body">
+            {{ forms.lightswitchField({
+                label: "Automatic Audit on Save"|t('content-intelligence'),
+                instructions: "Automatically trigger an entry audit whenever content is saved."|t('content-intelligence'),
+                id: 'enableAutoAuditOnSave',
+                name: 'settings[enableAutoAuditOnSave]',
+                on: settings.enableAutoAuditOnSave
+            }) }}
+
+            {{ forms.textField({
+                label: "Minimum Content Word Count"|t('content-intelligence'),
+                instructions: "Entries below this threshold are flagged as thin content."|t('content-intelligence'),
+                id: 'minContentWordCount',
+                name: 'settings[minContentWordCount]',
+                value: settings.minContentWordCount,
+                type: 'number'
+            }) }}
+
+            {{ forms.textField({
+                label: "Content Stale Threshold (Days)"|t('content-intelligence'),
+                instructions: "Entries not updated within this timeframe are flagged for freshness review."|t('content-intelligence'),
+                id: 'staleContentDays',
+                name: 'settings[staleContentDays]',
+                value: settings.staleContentDays,
+                type: 'number'
+            }) }}
+        </div>
+    </div>
+
+    <div class="ci-panel">
+        <div class="ci-panel-header">
+            <h2>{{ "SEO Audit Thresholds"|t('content-intelligence') }}</h2>
+            <span class="ci-edition-badge ci-badge-lite">{{ "Lite / Pro / Agency"|t('content-intelligence') }}</span>
+        </div>
+        <div class="ci-panel-body">
+            <div style="display: flex; gap: 2rem;">
+                <div style="flex: 1;">
+                    {{ forms.textField({
+                        label: "Min Title Length (Characters)"|t('content-intelligence'),
+                        id: 'minTitleLength',
+                        name: 'settings[minTitleLength]',
+                        value: settings.minTitleLength,
+                        type: 'number'
+                    }) }}
+                </div>
+                <div style="flex: 1;">
+                    {{ forms.textField({
+                        label: "Max Title Length (Characters)"|t('content-intelligence'),
+                        id: 'maxTitleLength',
+                        name: 'settings[maxTitleLength]',
+                        value: settings.maxTitleLength,
+                        type: 'number'
+                    }) }}
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 2rem; margin-top: 1rem;">
+                <div style="flex: 1;">
+                    {{ forms.textField({
+                        label: "Min Meta Description Length"|t('content-intelligence'),
+                        id: 'minDescriptionLength',
+                        name: 'settings[minDescriptionLength]',
+                        value: settings.minDescriptionLength,
+                        type: 'number'
+                    }) }}
+                </div>
+                <div style="flex: 1;">
+                    {{ forms.textField({
+                        label: "Max Meta Description Length"|t('content-intelligence'),
+                        id: 'maxDescriptionLength',
+                        name: 'settings[maxDescriptionLength]',
+                        value: settings.maxDescriptionLength,
+                        type: 'number'
+                    }) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ci-panel">
+        <div class="ci-panel-header">
+            <h2>{{ "AI Configuration (BYOK)"|t('content-intelligence') }}</h2>
+            <span class="ci-edition-badge ci-badge-pro">{{ "Pro & Agency"|t('content-intelligence') }}</span>
+        </div>
+        <div class="ci-panel-body">
+            <p style="margin-bottom: 1rem; color: #64748b; font-size: 0.9rem;">
+                {{ "Bring Your Own Key: Content Intelligence connects directly to your OpenAI account. Keys can be set directly or referenced via environment variables (e.g. $OPENAI_API_KEY)."|t('content-intelligence') }}
+            </p>
+
+            {{ forms.autosuggestField({
+                label: "OpenAI API Key"|t('content-intelligence'),
+                instructions: "Your secret OpenAI API key or an environment variable reference."|t('content-intelligence'),
+                id: 'openaiApiKey',
+                name: 'settings[openaiApiKey]',
+                value: settings.openaiApiKey,
+                suggestEnvVars: true,
+                placeholder: '$OPENAI_API_KEY'
+            }) }}
+
+            {{ forms.textField({
+                label: "OpenAI Model"|t('content-intelligence'),
+                instructions: "Default model used for completions and suggestions."|t('content-intelligence'),
+                id: 'openaiModel',
+                name: 'settings[openaiModel]',
+                value: settings.openaiModel
+            }) }}
+
+            <div style="margin-top: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+                <button type="button" id="ci-test-ai-settings-btn" class="btn">
+                    {{ "Test OpenAI Connection"|t('content-intelligence') }}
+                </button>
+                <span id="ci-settings-ai-spinner" class="spinner hidden"></span>
+            </div>
+            <div id="ci-settings-ai-result" style="display: none; margin-top: 1rem; padding: 0.75rem 1rem; border-radius: 6px;"></div>
+        </div>
+    </div>
+
+    <div class="ci-panel">
+        <div class="ci-panel-header">
+            <h2>{{ "Vector Database & Semantic Intelligence"|t('content-intelligence') }}</h2>
+            <span class="ci-edition-badge ci-badge-agency">{{ "Agency"|t('content-intelligence') }}</span>
+        </div>
+        <div class="ci-panel-body">
+            {{ forms.autosuggestField({
+                label: "Qdrant REST Endpoint"|t('content-intelligence'),
+                instructions: "URL to your self-hosted or Qdrant Cloud cluster."|t('content-intelligence'),
+                id: 'qdrantUrl',
+                name: 'settings[qdrantUrl]',
+                value: settings.qdrantUrl,
+                suggestEnvVars: true,
+                placeholder: '$QDRANT_URL'
+            }) }}
+
+            {{ forms.autosuggestField({
+                label: "Qdrant API Key"|t('content-intelligence'),
+                instructions: "Leave blank if your local Qdrant instance does not require authentication."|t('content-intelligence'),
+                id: 'qdrantApiKey',
+                name: 'settings[qdrantApiKey]',
+                value: settings.qdrantApiKey,
+                suggestEnvVars: true,
+                placeholder: '$QDRANT_API_KEY'
+            }) }}
+
+            {{ forms.textField({
+                label: "Qdrant Collection Name"|t('content-intelligence'),
+                id: 'qdrantCollection',
+                name: 'settings[qdrantCollection]',
+                value: settings.qdrantCollection
+            }) }}
+
+            <div style="margin-top: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+                <button type="button" id="ci-test-qdrant-btn" class="btn">
+                    {{ "Test Qdrant Connection"|t('content-intelligence') }}
+                </button>
+                <span id="ci-settings-qdrant-spinner" class="spinner hidden"></span>
+            </div>
+            <div id="ci-settings-qdrant-result" style="display: none; margin-top: 1rem; padding: 0.75rem 1rem; border-radius: 6px;"></div>
+        </div>
+    </div>
+
+    <div class="buttons">
+        <input type="submit" class="btn submit" value="{{ 'Save Settings'|t('content-intelligence') }}">
+    </div>
+</form>
+
+{% js %}
+    $('#ci-test-ai-settings-btn').on('click', function() {
+        var $btn = $(this);
+        var $spinner = $('#ci-settings-ai-spinner');
+        var $result = $('#ci-settings-ai-result');
+
+        $btn.addClass('disabled');
+        $spinner.removeClass('hidden');
+        $result.hide();
+
+        Craft.postActionRequest('content-intelligence/ai/test-connection', {}, function(response, textStatus) {
+            $btn.removeClass('disabled');
+            $spinner.addClass('hidden');
+
+            $result.show();
+            if (response.success) {
+                $result.css({
+                    'background': '#f0fdf4',
+                    'border': '1px solid #bbf7d0',
+                    'color': '#166534'
+                }).html('<strong>Connection Successful:</strong> ' + response.message);
+            } else {
+                $result.css({
+                    'background': '#fef2f2',
+                    'border': '1px solid #fecaca',
+                    'color': '#991b1b'
+                }).html('<strong>Connection Failed:</strong> ' + response.message);
+            }
+        });
+    });
+
+    $('#ci-test-qdrant-btn').on('click', function() {
+        var $btn = $(this);
+        var $spinner = $('#ci-settings-qdrant-spinner');
+        var $result = $('#ci-settings-qdrant-result');
+
+        $btn.addClass('disabled');
+        $spinner.removeClass('hidden');
+        $result.hide();
+
+        var qdrantUrl = $('#qdrantUrl').val();
+        var qdrantApiKey = $('#qdrantApiKey').val();
+
+        Craft.postActionRequest('content-intelligence/semantic/test-connection', {
+            url: qdrantUrl,
+            apiKey: qdrantApiKey
+        }, function(response, textStatus) {
+            $btn.removeClass('disabled');
+            $spinner.addClass('hidden');
+
+            $result.show();
+            if (response.success) {
+                $result.css({
+                    'background': '#f0fdf4',
+                    'border': '1px solid #bbf7d0',
+                    'color': '#166534'
+                }).html('<strong>Qdrant Online:</strong> ' + response.message);
+            } else {
+                $result.css({
+                    'background': '#fef2f2',
+                    'border': '1px solid #fecaca',
+                    'color': '#991b1b'
+                }).html('<strong>Connection Notice:</strong> ' + response.message);
+            }
+        });
+    });
+{% endjs %}
+{% endblock %}

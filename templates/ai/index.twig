@@ -1,0 +1,862 @@
+{% extends "content-intelligence/_layouts/cp" %}
+
+{% set title = "AI Content Assistant"|t('content-intelligence') %}
+{% set selectedSubnavItem = 'ai' %}
+
+{% block ciContent %}
+    {% if not hasPro %}
+        <div class="ci-upgrade-banner">
+            <h3>{{ "Upgrade to Pro for AI Content Intelligence"|t('content-intelligence') }}</h3>
+            <p>
+                {{ "The AI Content Assistant uses your own OpenAI API key (BYOK) to analyze content depth, generate meta titles and descriptions, draft alt-text, generate FAQs, and recommend content improvements with human-in-the-loop approval."|t('content-intelligence') }}
+            </p>
+            <p style="margin-top: 1rem;">
+                <a href="https://plugins.craftcms.com" target="_blank" rel="noopener" class="btn submit">
+                    {{ "Upgrade to Pro Edition"|t('content-intelligence') }}
+                </a>
+            </p>
+        </div>
+    {% endif %}
+
+    <!-- Entry Selector & Workspace Toolbar -->
+    <div class="ci-panel" style="margin-bottom: 1.5rem;">
+        <div class="ci-panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <h2 style="margin: 0;">{{ "AI Content Intelligence Workspace"|t('content-intelligence') }}</h2>
+                <span class="ci-edition-badge ci-badge-pro">{{ "Pro & Agency"|t('content-intelligence') }}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <label for="ci-entry-selector" style="font-size: 13px; font-weight: 600; color: #475569;">{{ "Select Entry:"|t('content-intelligence') }}</label>
+                <select id="ci-entry-selector" class="select" onchange="window.location.href='{{ url('content-intelligence/ai') }}?entryId=' + this.value">
+                    {% for ent in entries %}
+                        <option value="{{ ent.id }}" {% if selectedEntry and selectedEntry.id == ent.id %}selected{% endif %}>
+                            {{ ent.title }} ({{ ent.section.name ?? 'Entry' }})
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if selectedEntry %}
+                    <a href="{{ selectedEntry.getCpEditUrl() }}" class="btn small" target="_blank">
+                        {{ "Edit Entry"|t('content-intelligence') }} ↗
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if selectedEntry and entryContent %}
+            <div class="ci-panel-body" style="padding: 1.25rem 1.5rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.1rem; color: #0f172a;">{{ selectedEntry.title }}</h3>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 13px; color: #64748b;">
+                            {{ "Section: "|t('content-intelligence') }}<strong>{{ selectedEntry.section.name ?? 'General' }}</strong> &bull;
+                            {{ "Word Count: "|t('content-intelligence') }}<strong>{{ entryContent.wordCount }} words</strong> &bull;
+                            {{ "Status: "|t('content-intelligence') }}<span class="status {{ selectedEntry.status }}"></span> {{ selectedEntry.status|capitalize }}
+                        </p>
+                    </div>
+                    <div>
+                        <a href="{{ url('content-intelligence/seo/' ~ selectedEntry.id) }}" class="btn small">
+                            {{ "View SEO Audit"|t('content-intelligence') }}
+                        </a>
+                        <a href="{{ url('content-intelligence/audit/' ~ selectedEntry.id) }}" class="btn small">
+                            {{ "View Content Audit"|t('content-intelligence') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workspace Tabs -->
+            <div class="ci-panel-body" style="padding: 1.5rem;">
+                <div class="ci-tabs-nav" style="display: flex; gap: 0.5rem; border-bottom: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+                    <button type="button" class="ci-tab-btn active" data-tab="meta" style="padding: 0.6rem 1.25rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid #6366f1; color: #4338ca; cursor: pointer;">
+                        {{ "SEO Meta Tags"|t('content-intelligence') }}
+                    </button>
+                    <button type="button" class="ci-tab-btn" data-tab="improve" style="padding: 0.6rem 1.25rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid transparent; color: #64748b; cursor: pointer;">
+                        {{ "Improve Content (Diff)"|t('content-intelligence') }}
+                    </button>
+                    <button type="button" class="ci-tab-btn" data-tab="faqs" style="padding: 0.6rem 1.25rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid transparent; color: #64748b; cursor: pointer;">
+                        {{ "FAQ Generator"|t('content-intelligence') }}
+                    </button>
+                    <button type="button" class="ci-tab-btn" data-tab="summary" style="padding: 0.6rem 1.25rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid transparent; color: #64748b; cursor: pointer;">
+                        {{ "Executive Summary"|t('content-intelligence') }}
+                    </button>
+                    <button type="button" class="ci-tab-btn" data-tab="alt" style="padding: 0.6rem 1.25rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid transparent; color: #64748b; cursor: pointer;">
+                        {{ "Image Alt Text"|t('content-intelligence') }}
+                    </button>
+                    <button type="button" class="ci-tab-btn" data-tab="seointel" style="padding: 0.6rem 1.25rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid transparent; color: #64748b; cursor: pointer;">
+                        {{ "Search Intent & Depth"|t('content-intelligence') }}
+                    </button>
+                </div>
+
+                <!-- Hidden Values -->
+                <input type="hidden" id="ci-workspace-entry-id" value="{{ selectedEntry.id }}">
+                <input type="hidden" id="ci-workspace-entry-title" value="{{ selectedEntry.title }}">
+                <div id="ci-workspace-entry-body" style="display: none;">{{ entryContent.body }}</div>
+
+                <!-- TAB 1: SEO META TAGS -->
+                <div class="ci-tab-pane" id="ci-pane-meta">
+                    <p style="color: #64748b; font-size: 13px; margin-bottom: 1rem;">
+                        {{ "Generate high-CTR, search-optimized meta title and description suggestions grounded directly in this entry's content."|t('content-intelligence') }}
+                    </p>
+                    <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+                        <button type="button" id="ci-btn-gen-meta" class="btn submit">
+                            {{ "Generate Meta Suggestions"|t('content-intelligence') }}
+                        </button>
+                        <span id="ci-meta-spinner" class="spinner hidden"></span>
+                    </div>
+
+                    <div id="ci-meta-results" style="display: none;">
+                        <h4 style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 0.75rem;">
+                            {{ "Suggested Meta Titles (Target: 30–60 chars)"|t('content-intelligence') }}
+                        </h4>
+                        <div id="ci-title-suggestions" style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;"></div>
+
+                        <h4 style="font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 0.75rem;">
+                            {{ "Suggested Meta Descriptions (Target: 120–160 chars)"|t('content-intelligence') }}
+                        </h4>
+                        <div id="ci-desc-suggestions" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: IMPROVE CONTENT (DIFF VIEW) -->
+                <div class="ci-tab-pane" id="ci-pane-improve" style="display: none;">
+                    <p style="color: #64748b; font-size: 13px; margin-bottom: 1rem;">
+                        {{ "Polish readability, engagement, and flow while strictly preserving all facts. Inspect the side-by-side diff before approving."|t('content-intelligence') }}
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: 240px 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                        <div>
+                            <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 0.25rem;">{{ "Target Tone"|t('content-intelligence') }}</label>
+                            <select id="ci-improve-tone" class="select fullwidth">
+                                <option value="professional">{{ "Professional & Authoritative"|t('content-intelligence') }}</option>
+                                <option value="engaging">{{ "Engaging & Conversational"|t('content-intelligence') }}</option>
+                                <option value="concise">{{ "Clear & Concise"|t('content-intelligence') }}</option>
+                                <option value="persuasive">{{ "Persuasive & Marketing"|t('content-intelligence') }}</option>
+                                <option value="technical">{{ "Technical & In-depth"|t('content-intelligence') }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 0.25rem;">{{ "Custom Instructions (Optional)"|t('content-intelligence') }}</label>
+                            <input type="text" id="ci-improve-instructions" class="text fullwidth" placeholder="{{ "e.g. Focus on benefits for seniors, simplify jargon"|t('content-intelligence') }}">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+                        <button type="button" id="ci-btn-improve-content" class="btn submit">
+                            {{ "Generate Improved Content"|t('content-intelligence') }}
+                        </button>
+                        <span id="ci-improve-spinner" class="spinner hidden"></span>
+                    </div>
+
+                    <div id="ci-improve-results" style="display: none;">
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
+                            <h4 style="font-size: 13px; font-weight: 600; margin: 0 0 0.5rem 0;">{{ "Improvements Summary"|t('content-intelligence') }}</h4>
+                            <ul id="ci-improvements-list" style="margin: 0; padding-left: 1.25rem; font-size: 13px; color: #475569;"></ul>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
+                            <div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                                    <strong style="font-size: 13px; color: #64748b;">{{ "Original Content"|t('content-intelligence') }}</strong>
+                                    <span id="ci-orig-wc" style="font-size: 12px; color: #94a3b8;"></span>
+                                </div>
+                                <textarea id="ci-original-text" readonly class="text fullwidth" style="height: 320px; font-size: 13px; line-height: 1.6; background: #fafafa;"></textarea>
+                            </div>
+                            <div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+                                    <strong style="font-size: 13px; color: #16a34a;">{{ "AI Improved Suggestion"|t('content-intelligence') }}</strong>
+                                    <span id="ci-sugg-wc" style="font-size: 12px; color: #16a34a; font-weight: 600;"></span>
+                                </div>
+                                <textarea id="ci-improved-text" class="text fullwidth" style="height: 320px; font-size: 13px; line-height: 1.6; border-color: #86efac;"></textarea>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
+                            <span style="font-size: 13px; color: #166534;">
+                                🛡️ <strong>{{ "Human-in-the-Loop Workflow"|t('content-intelligence') }}:</strong>
+                                {{ "Review the changes above. Copy to your clipboard and apply to the entry when ready."|t('content-intelligence') }}
+                            </span>
+                            <button type="button" class="btn submit ci-copy-btn" data-target="#ci-improved-text">
+                                {{ "Copy Improved Content"|t('content-intelligence') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: FAQ GENERATOR -->
+                <div class="ci-tab-pane" id="ci-pane-faqs" style="display: none;">
+                    <p style="color: #64748b; font-size: 13px; margin-bottom: 1rem;">
+                        {{ "Extract reader questions and factual answers grounded strictly in the entry's content."|t('content-intelligence') }}
+                    </p>
+                    <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+                        <button type="button" id="ci-btn-gen-faqs" class="btn submit">
+                            {{ "Generate FAQs"|t('content-intelligence') }}
+                        </button>
+                        <span id="ci-faqs-spinner" class="spinner hidden"></span>
+                    </div>
+
+                    <div id="ci-faqs-results" style="display: none;">
+                        <div id="ci-faqs-container" style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.25rem;"></div>
+                        <div style="display: flex; gap: 0.75rem;">
+                            <button type="button" id="ci-copy-faqs-md" class="btn">{{ "Copy FAQs as Markdown"|t('content-intelligence') }}</button>
+                            <button type="button" id="ci-copy-faqs-schema" class="btn">{{ "Copy as JSON-LD FAQ Schema"|t('content-intelligence') }}</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: EXECUTIVE SUMMARY -->
+                <div class="ci-tab-pane" id="ci-pane-summary" style="display: none;">
+                    <p style="color: #64748b; font-size: 13px; margin-bottom: 1rem;">
+                        {{ "Generate structured executive summaries, TL;DR excerpts, and social teasers."|t('content-intelligence') }}
+                    </p>
+                    <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+                        <button type="button" id="ci-btn-gen-summary" class="btn submit">
+                            {{ "Generate Summaries"|t('content-intelligence') }}
+                        </button>
+                        <span id="ci-summary-spinner" class="spinner hidden"></span>
+                    </div>
+
+                    <div id="ci-summary-results" style="display: none; display: flex; flex-direction: column; gap: 1.25rem;">
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <strong style="font-size: 14px;">{{ "TL;DR (Quick Excerpt)"|t('content-intelligence') }}</strong>
+                                <button type="button" class="btn small ci-copy-btn" data-target="#ci-summary-tldr">{{ "Copy"|t('content-intelligence') }}</button>
+                            </div>
+                            <p id="ci-summary-tldr" style="font-size: 13px; color: #334155; margin: 0; line-height: 1.6;"></p>
+                        </div>
+
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <strong style="font-size: 14px;">{{ "Executive Summary"|t('content-intelligence') }}</strong>
+                                <button type="button" class="btn small ci-copy-btn" data-target="#ci-summary-exec">{{ "Copy"|t('content-intelligence') }}</button>
+                            </div>
+                            <p id="ci-summary-exec" style="font-size: 13px; color: #334155; margin: 0; line-height: 1.6;"></p>
+                        </div>
+
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <strong style="font-size: 14px;">{{ "Social Media Teaser (LinkedIn / Twitter)"|t('content-intelligence') }}</strong>
+                                <button type="button" class="btn small ci-copy-btn" data-target="#ci-summary-social">{{ "Copy"|t('content-intelligence') }}</button>
+                            </div>
+                            <p id="ci-summary-social" style="font-size: 13px; color: #334155; margin: 0; line-height: 1.6;"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: IMAGE ALT TEXT -->
+                <div class="ci-tab-pane" id="ci-pane-alt" style="display: none;">
+                    <p style="color: #64748b; font-size: 13px; margin-bottom: 1rem;">
+                        {{ "Generate descriptive, accessible alt text for images referenced in this entry."|t('content-intelligence') }}
+                    </p>
+
+                    {% if entryContent.images|length > 0 %}
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.25rem;">
+                            {% for img in entryContent.images %}
+                                <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem 1rem;">
+                                    <div>
+                                        <strong>{{ img.filename }}</strong>
+                                        <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                                            {{ "Current Alt: "|t('content-intelligence') }}<code>{{ img.alt ?: "Missing" }}</code>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn small ci-btn-gen-img-alt" data-asset-id="{{ img.id }}" data-filename="{{ img.filename }}">
+                                        {{ "Generate Alt Text"|t('content-intelligence') }}
+                                    </button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div style="margin-bottom: 1.25rem; max-width: 600px;">
+                            <label style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 0.25rem;">{{ "Image Context or Filename"|t('content-intelligence') }}</label>
+                            <input type="text" id="ci-alt-custom-context" class="text fullwidth" placeholder="{{ "e.g. company-headquarters.jpg or Staff meeting in modern office"|t('content-intelligence') }}">
+                            <button type="button" id="ci-btn-gen-custom-alt" class="btn submit" style="margin-top: 0.5rem;">
+                                {{ "Generate Alt Text"|t('content-intelligence') }}
+                            </button>
+                        </div>
+                    {% endif %}
+
+                    <div id="ci-alt-results" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <strong style="font-size: 14px;">{{ "Suggested Alt Text"|t('content-intelligence') }}</strong>
+                            <button type="button" class="btn small ci-copy-btn" data-target="#ci-alt-text-output">{{ "Copy"|t('content-intelligence') }}</button>
+                        </div>
+                        <p id="ci-alt-text-output" style="font-size: 14px; font-weight: 600; color: #1e293b; margin: 0 0 0.5rem 0;"></p>
+                        <p id="ci-alt-explanation" style="font-size: 12px; color: #64748b; margin: 0;"></p>
+                    </div>
+                </div>
+
+                <!-- TAB 6: SEARCH INTENT & DEPTH -->
+                <div class="ci-tab-pane" id="ci-pane-seointel" style="display: none;">
+                    <p style="color: #64748b; font-size: 13px; margin-bottom: 1rem;">
+                        {{ "Perform in-depth search intent analysis, topical coverage evaluation, semantic entity discovery, and competitive angle advice."|t('content-intelligence') }}
+                    </p>
+
+                    <div style="display: flex; gap: 1rem; align-items: flex-end; margin-bottom: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                        <div style="flex: 1;">
+                            <label for="ci-ws-target-keyword" style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 0.35rem; color: #334155;">
+                                {{ "Focus Target Keyword / Query (Optional):"|t('content-intelligence') }}
+                            </label>
+                            <input type="text" id="ci-ws-target-keyword" class="text fullwidth" value="{{ selectedEntry.title }}" placeholder="{{ "e.g. senior living directory"|t('content-intelligence') }}">
+                        </div>
+                        <div>
+                            <button type="button" id="ci-btn-ws-run-ai-seo" class="btn submit" style="display: flex; align-items: center; gap: 0.5rem; background: #6366f1; border-color: #6366f1; color: #fff;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <span>{{ "Analyze SEO Intelligence"|t('content-intelligence') }}</span>
+                            </button>
+                        </div>
+                        <span id="ci-ws-ai-seo-spinner" class="spinner hidden" style="margin-bottom: 0.5rem;"></span>
+                    </div>
+
+                    <div id="ci-ws-ai-seo-results" style="display: none; display: flex; flex-direction: column; gap: 1.5rem;">
+                        <!-- Row 1: Intent & Coverage -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                    <strong style="font-size: 13px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">{{ "Search Intent Classification"|t('content-intelligence') }}</strong>
+                                    <span id="ci-ws-intent-rating" style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 9999px;"></span>
+                                </div>
+                                <div style="margin-bottom: 0.75rem;">
+                                    <span id="ci-ws-intent-badge" style="display: inline-block; font-size: 1.1rem; font-weight: 700; color: #0f172a; text-transform: uppercase;"></span>
+                                </div>
+                                <p id="ci-ws-intent-exp" style="font-size: 13px; color: #475569; margin: 0; line-height: 1.5;"></p>
+                            </div>
+
+                            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                    <strong style="font-size: 13px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">{{ "Topic Depth & Completeness"|t('content-intelligence') }}</strong>
+                                    <span id="ci-ws-coverage-score" style="font-size: 13px; font-weight: 700; color: #16a34a;"></span>
+                                </div>
+                                <div style="margin-bottom: 0.5rem; font-size: 13px; color: #334155;">
+                                    {{ "Primary Subject: "|t('content-intelligence') }}<strong id="ci-ws-primary-topic"></strong>
+                                </div>
+                                <div>
+                                    <span style="font-size: 12px; color: #64748b; display: block; margin-bottom: 0.25rem;">{{ "Covered Subtopics:"|t('content-intelligence') }}</span>
+                                    <div id="ci-ws-covered-subtopics" style="display: flex; flex-wrap: wrap; gap: 0.35rem;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Gaps & Semantic Entities -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                    <span style="color: #d97706; font-size: 16px;">⚠️</span>
+                                    <strong style="font-size: 14px; color: #0f172a;">{{ "Content Gaps & Expected Subtopics"|t('content-intelligence') }}</strong>
+                                </div>
+                                <ul id="ci-ws-missing-subtopics" style="margin: 0 0 1rem 0; padding-left: 1.25rem; font-size: 13px; color: #334155; line-height: 1.6;"></ul>
+                                <strong style="font-size: 12px; color: #64748b; display: block; margin-bottom: 0.25rem;">{{ "Suggested Headings:"|t('content-intelligence') }}</strong>
+                                <div id="ci-ws-suggested-headings" style="display: flex; flex-direction: column; gap: 0.35rem;"></div>
+                            </div>
+
+                            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                    <span style="color: #6366f1; font-size: 16px;">💎</span>
+                                    <strong style="font-size: 14px; color: #0f172a;">{{ "Semantic Entities & Opportunities"|t('content-intelligence') }}</strong>
+                                </div>
+                                <div id="ci-ws-semantic-keywords" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Row 3: Differentiation Angle & Action Items -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                            <div style="background: #fdf4ff; border: 1px solid #f0abfc; border-radius: 8px; padding: 1.25rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                    <strong style="font-size: 14px; color: #86198f;">{{ "Competitive Differentiation Angle"|t('content-intelligence') }}</strong>
+                                    <span id="ci-ws-uniqueness-score" style="font-size: 11px; font-weight: 700; background: #fae8ff; color: #86198f; padding: 2px 7px; border-radius: 9999px;"></span>
+                                </div>
+                                <p id="ci-ws-diff-angle" style="font-size: 13px; color: #701a75; margin: 0; line-height: 1.6;"></p>
+                            </div>
+
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 1.25rem;">
+                                <strong style="font-size: 14px; color: #166534; display: block; margin-bottom: 0.5rem;">
+                                    {{ "Prioritized Action Roadmap"|t('content-intelligence') }}
+                                </strong>
+                                <ol id="ci-ws-prioritized-actions" style="margin: 0; padding-left: 1.25rem; font-size: 13px; color: #14532d; line-height: 1.6;"></ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="ci-panel-body">
+                <p style="color: #64748b;">{{ "No entries found to analyze. Please create entries first."|t('content-intelligence') }}</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Provider Health & Diagnostics Panel -->
+    <div class="ci-panel">
+        <div class="ci-panel-header">
+            <h2>{{ "AI Provider Configuration & Health"|t('content-intelligence') }}</h2>
+        </div>
+        <div class="ci-panel-body">
+            <table class="data fullwidth">
+                <tr>
+                    <td style="width: 250px;"><strong>{{ "AI Provider"|t('content-intelligence') }}</strong></td>
+                    <td>{{ aiHealth.provider }} (Bring Your Own Key)</td>
+                </tr>
+                <tr>
+                    <td><strong>{{ "Selected Model"|t('content-intelligence') }}</strong></td>
+                    <td><code>{{ aiHealth.model }}</code></td>
+                </tr>
+                <tr>
+                    <td><strong>{{ "API Key Status"|t('content-intelligence') }}</strong></td>
+                    <td>
+                        {% if aiHealth.configured %}
+                            <span class="ci-severity-badge ci-severity-good">{{ "Configured"|t('content-intelligence') }}</span>
+                            <code style="margin-left: 0.5rem;">{{ aiHealth.maskedKey }}</code>
+                        {% else %}
+                            <span class="ci-severity-badge ci-severity-warning">{{ "Not Configured"|t('content-intelligence') }}</span>
+                            <span style="color: #64748b; margin-left: 0.5rem;">{{ "Set in Settings or via $OPENAI_API_KEY environment variable."|t('content-intelligence') }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+
+            <div style="margin-top: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+                <button type="button" id="ci-test-ai-btn" class="btn">
+                    {{ "Test OpenAI Connection"|t('content-intelligence') }}
+                </button>
+                <a href="{{ url('content-intelligence/settings') }}" class="btn">
+                    {{ "Configure AI Settings"|t('content-intelligence') }}
+                </a>
+                <span id="ci-ai-test-spinner" class="spinner hidden"></span>
+            </div>
+
+            <!-- Health check result toast -->
+            <div id="ci-ai-test-result" style="display: none; margin-top: 1.25rem; padding: 1rem 1.25rem; border-radius: 6px;"></div>
+        </div>
+    </div>
+
+    <!-- AI Architecture & Privacy Disclosure -->
+    <div class="ci-panel">
+        <div class="ci-panel-header">
+            <h2>{{ "AI Architecture & Privacy Notice"|t('content-intelligence') }}</h2>
+        </div>
+        <div class="ci-panel-body">
+            <p style="color: #475569; line-height: 1.6; margin-bottom: 1rem;">
+                <strong>{{ "Direct BYOK Architecture"|t('content-intelligence') }}:</strong>
+                {{ "Requests are sent directly from your Craft CMS installation to OpenAI using your supplied credentials. Content Intelligence never routes your traffic through intermediate proxy servers."|t('content-intelligence') }}
+            </p>
+            <p style="color: #475569; line-height: 1.6; margin-bottom: 1rem;">
+                <strong>{{ "Human-in-the-Loop Safeguard"|t('content-intelligence') }}:</strong>
+                {{ "AI operations follow an Analyze → Suggest → Preview → Approve workflow. AI suggestions never overwrite published website content automatically."|t('content-intelligence') }}
+            </p>
+            <p style="color: #475569; line-height: 1.6;">
+                <strong>{{ "Strict Anti-Hallucination Prompts"|t('content-intelligence') }}:</strong>
+                {{ "System prompts strictly forbid inventing facts or guaranteeing search rankings. The model is instructed to treat your entry text as the primary source of truth."|t('content-intelligence') }}
+            </p>
+        </div>
+    </div>
+
+    {% js %}
+        // Test OpenAI Connection
+        $('#ci-test-ai-btn').on('click', function() {
+            var $btn = $(this);
+            var $spinner = $('#ci-ai-test-spinner');
+            var $result = $('#ci-ai-test-result');
+
+            $btn.addClass('disabled');
+            $spinner.removeClass('hidden');
+            $result.hide();
+
+            Craft.postActionRequest('content-intelligence/ai/test-connection', {}, function(response) {
+                $btn.removeClass('disabled');
+                $spinner.addClass('hidden');
+
+                $result.show();
+                if (response.success) {
+                    $result.css({
+                        'background': '#f0fdf4',
+                        'border': '1px solid #bbf7d0',
+                        'color': '#166534'
+                    }).html('<strong>Connection Successful:</strong> ' + response.message);
+                } else {
+                    $result.css({
+                        'background': '#fef2f2',
+                        'border': '1px solid #fecaca',
+                        'color': '#991b1b'
+                    }).html('<strong>Connection Failed:</strong> ' + response.message);
+                }
+            });
+        });
+
+        // Tabs switching
+        $('.ci-tab-btn').on('click', function() {
+            var tab = $(this).data('tab');
+            $('.ci-tab-btn').css({'border-bottom-color': 'transparent', 'color': '#64748b'});
+            $(this).css({'border-bottom-color': '#6366f1', 'color': '#4338ca'});
+            $('.ci-tab-pane').hide();
+            $('#ci-pane-' + tab).show();
+        });
+
+        // Copy button
+        // Universal Copy to Clipboard Helper
+        function ciCopyToClipboard(text, $btn) {
+            if (!text) return;
+
+            function notifySuccess() {
+                if ($btn && $btn.length) {
+                    var origText = $btn.data('ci-orig-text') || $btn.text();
+                    $btn.data('ci-orig-text', origText);
+                    $btn.text(Craft.t('content-intelligence', 'Copied!'));
+                    $btn.addClass('success');
+                    setTimeout(function() {
+                        $btn.text(origText);
+                        $btn.removeClass('success');
+                    }, 1500);
+                }
+                Craft.cp.displayNotice(Craft.t('content-intelligence', 'Copied to clipboard!'));
+            }
+
+            function fallbackCopy() {
+                try {
+                    var textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.setAttribute('readonly', '');
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-9999px';
+                    textArea.style.top = '0';
+                    textArea.style.opacity = '0';
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    var successful = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    if (successful) {
+                        notifySuccess();
+                    } else {
+                        window.prompt(Craft.t('content-intelligence', 'Copy to clipboard: Ctrl+C, Enter'), text);
+                    }
+                } catch (err) {
+                    window.prompt(Craft.t('content-intelligence', 'Copy to clipboard: Ctrl+C, Enter'), text);
+                }
+            }
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(function() {
+                    notifySuccess();
+                }).catch(function() {
+                    fallbackCopy();
+                });
+            } else {
+                fallbackCopy();
+            }
+        }
+
+        // Copy button for targets
+        $(document).on('click', '.ci-copy-btn', function(e) {
+            e.preventDefault();
+            var target = $(this).data('target');
+            var text = $(target).is('input, textarea') ? $(target).val() : $(target).text();
+            ciCopyToClipboard(text, $(this));
+        });
+
+        var entryId = $('#ci-workspace-entry-id').val();
+        var entryTitle = $('#ci-workspace-entry-title').val();
+        var entryBody = $('#ci-workspace-entry-body').text();
+        var faqsCache = [];
+        var hasPro = {{ hasPro ? 'true' : 'false' }};
+
+        function checkProLicense() {
+            if (!hasPro) {
+                Craft.cp.displayNotice('{{ "AI Assistant features require Content Intelligence Pro edition. Please upgrade your license to unlock."|t("content-intelligence")|e("js") }}');
+                return false;
+            }
+            return true;
+        }
+
+        // Generate Meta
+        $('#ci-btn-gen-meta').on('click', function() {
+            if (!checkProLicense()) return;
+            var $btn = $(this);
+            var $spinner = $('#ci-meta-spinner');
+            $btn.addClass('disabled');
+            $spinner.removeClass('hidden');
+
+            Craft.postActionRequest('content-intelligence/ai/generate-meta', {
+                entryId: entryId,
+                title: entryTitle,
+                content: entryBody
+            }, function(response) {
+                $btn.removeClass('disabled');
+                $spinner.addClass('hidden');
+
+                if (response.success) {
+                    var $titles = $('#ci-title-suggestions').empty();
+                    (response.titles || []).forEach(function(item) {
+                        var $row = $('<div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.75rem 1rem;">' +
+                            '<div><strong>' + item.title + '</strong> <span style="font-size:12px; color:#64748b; margin-left:0.5rem;">(' + item.length + ' chars) &bull; ' + item.rationale + '</span></div>' +
+                            '<div>' +
+                                '<button type="button" class="btn small ci-copy-val" data-val="' + item.title.replace(/"/g, '&quot;') + '">Copy</button>' +
+                            '</div>' +
+                        '</div>');
+                        $titles.append($row);
+                    });
+
+                    var $descs = $('#ci-desc-suggestions').empty();
+                    (response.descriptions || []).forEach(function(item) {
+                        var $row = $('<div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.75rem 1rem;">' +
+                            '<div style="flex:1; padding-right:1rem;">' + item.description + ' <span style="font-size:12px; color:#64748b; margin-left:0.5rem;">(' + item.length + ' chars)</span></div>' +
+                            '<div>' +
+                                '<button type="button" class="btn small ci-copy-val" data-val="' + item.description.replace(/"/g, '&quot;') + '">Copy</button>' +
+                            '</div>' +
+                        '</div>');
+                        $descs.append($row);
+                    });
+
+                    $('#ci-meta-results').show();
+                } else {
+                    Craft.cp.displayError(response.message || 'Error generating meta tags');
+                }
+            });
+        });
+
+        // Copy raw val helper
+        $(document).on('click', '.ci-copy-val', function(e) {
+            e.preventDefault();
+            var val = $(this).data('val') || $(this).attr('data-val') || $(this).closest('div').parent().find('strong').text();
+            ciCopyToClipboard(val, $(this));
+        });
+
+        // Improve Content
+        $('#ci-btn-improve-content').on('click', function() {
+            if (!checkProLicense()) return;
+            var $btn = $(this);
+            var $spinner = $('#ci-improve-spinner');
+            $btn.addClass('disabled');
+            $spinner.removeClass('hidden');
+
+            Craft.postActionRequest('content-intelligence/ai/improve-content', {
+                entryId: entryId,
+                title: entryTitle,
+                content: entryBody,
+                tone: $('#ci-improve-tone').val(),
+                instructions: $('#ci-improve-instructions').val()
+            }, function(response) {
+                $btn.removeClass('disabled');
+                $spinner.addClass('hidden');
+
+                if (response.success) {
+                    var $list = $('#ci-improvements-list').empty();
+                    (response.improvementsMade || []).forEach(function(imp) {
+                        $list.append('<li>' + imp + '</li>');
+                    });
+
+                    $('#ci-original-text').val(entryBody);
+                    $('#ci-improved-text').val(response.improvedContent);
+
+                    if (response.diff) {
+                        $('#ci-orig-wc').text(response.diff.oldWordCount + ' words');
+                        $('#ci-sugg-wc').text(response.diff.newWordCount + ' words (' + (response.diff.wordDifference >= 0 ? '+' : '') + response.diff.wordDifference + ')');
+                    }
+
+                    $('#ci-improve-results').show();
+                } else {
+                    Craft.cp.displayError(response.message || 'Error improving content');
+                }
+            });
+        });
+
+        // Generate FAQs
+        $('#ci-btn-gen-faqs').on('click', function() {
+            if (!checkProLicense()) return;
+            var $btn = $(this);
+            var $spinner = $('#ci-faqs-spinner');
+            $btn.addClass('disabled');
+            $spinner.removeClass('hidden');
+
+            Craft.postActionRequest('content-intelligence/ai/generate-faqs', {
+                entryId: entryId,
+                title: entryTitle,
+                content: entryBody
+            }, function(response) {
+                $btn.removeClass('disabled');
+                $spinner.addClass('hidden');
+
+                if (response.success) {
+                    faqsCache = response.faqs || [];
+                    var $c = $('#ci-faqs-container').empty();
+                    faqsCache.forEach(function(faq) {
+                        var $item = $('<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.75rem 1rem;">' +
+                            '<strong style="font-size:13px; color:#0f172a; display:block; margin-bottom:0.25rem;">Q: ' + faq.question + '</strong>' +
+                            '<p style="font-size:13px; color:#475569; margin:0; line-height:1.5;">A: ' + faq.answer + '</p>' +
+                        '</div>');
+                        $c.append($item);
+                    });
+                    $('#ci-faqs-results').show();
+                } else {
+                    Craft.cp.displayError(response.message || 'Error generating FAQs');
+                }
+            });
+        });
+
+        // Copy FAQs as Markdown
+        $('#ci-copy-faqs-md').on('click', function(e) {
+            e.preventDefault();
+            var md = faqsCache.map(function(f) {
+                return '### ' + f.question + '\n\n' + f.answer;
+            }).join('\n\n');
+            ciCopyToClipboard(md, $(this));
+        });
+
+        // Copy FAQs as JSON-LD Schema
+        $('#ci-copy-faqs-schema').on('click', function(e) {
+            e.preventDefault();
+            var schema = {
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                "mainEntity": faqsCache.map(function(f) {
+                    return {
+                        "@type": "Question",
+                        "name": f.question,
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": f.answer
+                        }
+                    };
+                })
+            };
+            ciCopyToClipboard(JSON.stringify(schema, null, 2), $(this));
+        });
+
+        // Generate Summary
+        $('#ci-btn-gen-summary').on('click', function() {
+            if (!checkProLicense()) return;
+            var $btn = $(this);
+            var $spinner = $('#ci-summary-spinner');
+            $btn.addClass('disabled');
+            $spinner.removeClass('hidden');
+
+            Craft.postActionRequest('content-intelligence/ai/generate-summary', {
+                entryId: entryId,
+                title: entryTitle,
+                content: entryBody
+            }, function(response) {
+                $btn.removeClass('disabled');
+                $spinner.addClass('hidden');
+
+                if (response.success && response.summary) {
+                    $('#ci-summary-tldr').text(response.summary.tldr || '');
+                    $('#ci-summary-exec').text(response.summary.executiveSummary || '');
+                    $('#ci-summary-social').text(response.summary.socialSnippet || '');
+                    $('#ci-summary-results').show();
+                } else {
+                    Craft.cp.displayError(response.message || 'Error generating summary');
+                }
+            });
+        });
+
+        // Generate Alt Text
+        $(document).on('click', '.ci-btn-gen-img-alt', function() {
+            var assetId = $(this).data('asset-id');
+            var filename = $(this).data('filename');
+            generateAltText(assetId, '', filename);
+        });
+
+        $('#ci-btn-gen-custom-alt').on('click', function() {
+            var context = $('#ci-alt-custom-context').val();
+            generateAltText(0, context, '');
+        });
+
+        function generateAltText(assetId, context, filename) {
+            Craft.postActionRequest('content-intelligence/ai/generate-alt', {
+                assetId: assetId,
+                context: context || entryTitle,
+                filename: filename
+            }, function(response) {
+                if (response.success) {
+                    $('#ci-alt-text-output').text(response.altText);
+                    $('#ci-alt-explanation').text(response.explanation);
+                    $('#ci-alt-results').show();
+                } else {
+                    Craft.cp.displayError(response.message || 'Error generating alt text');
+                }
+            });
+        }
+
+        // Analyze SEO Intelligence in Workspace
+        $('#ci-btn-ws-run-ai-seo').on('click', function() {
+            if (!checkProLicense()) return;
+            var $btn = $(this);
+            var $spinner = $('#ci-ws-ai-seo-spinner');
+            var keyword = $('#ci-ws-target-keyword').val();
+
+            $btn.addClass('disabled');
+            $spinner.removeClass('hidden');
+
+            Craft.postActionRequest('content-intelligence/ai/analyze-seo', {
+                entryId: entryId,
+                title: entryTitle,
+                content: entryBody,
+                targetKeyword: keyword
+            }, function(response) {
+                $btn.removeClass('disabled');
+                $spinner.addClass('hidden');
+
+                if (response.success && response.analysis) {
+                    var a = response.analysis;
+
+                    // 1. Search Intent
+                    if (a.searchIntent) {
+                        $('#ci-ws-intent-badge').text(a.searchIntent.primaryIntent || 'N/A');
+                        var rating = a.searchIntent.intentMatchRating || 'Moderate';
+                        var ratingColor = rating.toLowerCase() === 'strong' ? '#dcfce7; color:#166534' : (rating.toLowerCase() === 'moderate' ? '#fef3c7; color:#92400e' : '#fee2e2; color:#991b1b');
+                        $('#ci-ws-intent-rating').attr('style', 'font-size:11px; font-weight:700; padding:2px 8px; border-radius:9999px; background:' + ratingColor).text(rating + ' Alignment');
+                        $('#ci-ws-intent-exp').text(a.searchIntent.explanation || '');
+                    }
+
+                    // 2. Topic Coverage
+                    if (a.topicCoverage) {
+                        $('#ci-ws-coverage-score').text((a.topicCoverage.coverageScore || 80) + '% Coverage');
+                        $('#ci-ws-primary-topic').text(a.topicCoverage.primaryTopic || 'General');
+
+                        var $covered = $('#ci-ws-covered-subtopics').empty();
+                        (a.topicCoverage.coveredSubtopics || []).forEach(function(sub) {
+                            $covered.append('<span style="font-size:11px; background:#f1f5f9; color:#334155; padding:2px 6px; border-radius:4px;">✓ ' + sub + '</span>');
+                        });
+
+                        var $missing = $('#ci-ws-missing-subtopics').empty();
+                        (a.topicCoverage.missingSubtopics || []).forEach(function(m) {
+                            $missing.append('<li>' + m + '</li>');
+                        });
+
+                        var $headings = $('#ci-ws-suggested-headings').empty();
+                        (a.topicCoverage.suggestedHeadings || []).forEach(function(h) {
+                            $headings.append('<code style="display:block; padding:4px 8px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; font-size:11px; color:#4338ca;">' + h + '</code>');
+                        });
+                    }
+
+                    // 3. Semantic Keywords
+                    var $sem = $('#ci-ws-semantic-keywords').empty();
+                    (a.semanticKeywords || []).forEach(function(item) {
+                        $sem.append('<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.5rem 0.75rem;">' +
+                            '<strong style="font-size:12px; color:#1e293b;">' + item.term + '</strong>' +
+                            '<div style="font-size:11px; color:#64748b; margin-top:2px;">' + item.context + '</div>' +
+                        '</div>');
+                    });
+
+                    // 4. Differentiation
+                    if (a.differentiation) {
+                        $('#ci-ws-uniqueness-score').text((a.differentiation.uniquenessScore || 70) + '% Uniqueness');
+                        $('#ci-ws-diff-angle').text(a.differentiation.competitiveAngle || '');
+                    }
+
+                    // 5. Actions
+                    var $actions = $('#ci-ws-prioritized-actions').empty();
+                    (a.prioritizedActions || []).forEach(function(act) {
+                        $actions.append('<li style="margin-bottom:0.25rem;">' + act + '</li>');
+                    });
+
+                    $('#ci-ws-ai-seo-results').show();
+                    Craft.cp.displayNotice('AI SEO Intelligence audit complete.');
+                } else {
+                    Craft.cp.displayError(response.message || 'Error executing AI SEO audit.');
+                }
+            });
+        });
+    {% endjs %}
+{% endblock %}
+

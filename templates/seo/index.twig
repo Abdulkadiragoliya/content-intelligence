@@ -1,0 +1,140 @@
+{% extends "content-intelligence/_layouts/cp" %}
+
+{% set title = "SEO Intelligence"|t('content-intelligence') %}
+{% set selectedSubnavItem = 'seo' %}
+
+{% block pageActions %}
+    <form method="post" action="{{ cpUrl('content-intelligence/seo/run') }}" style="display: inline-block;">
+        {{ csrfInput() }}
+        {{ actionInput('content-intelligence/seo/run') }}
+        {{ redirectInput('content-intelligence/seo') }}
+        <button type="submit" class="btn submit">
+            <span class="icon" data-icon="refresh"></span>
+            {{ "Scan Site SEO"|t('content-intelligence') }}
+        </button>
+    </form>
+{% endblock %}
+
+{% block ciContent %}
+    <!-- SEO KPI Cards -->
+    <div class="ci-stats-grid">
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Average SEO Score"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value {% if stats.avgSeoScore >= 80 %}ci-stat-score-good{% elseif stats.avgSeoScore >= 50 %}ci-stat-score-warning{% else %}ci-stat-score-danger{% endif %}">
+                {{ stats.avgSeoScore }}/100
+            </div>
+            <div class="ci-stat-card-footer">{{ "Rules-based on-page technical health"|t('content-intelligence') }}</div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Missing Titles"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value {% if stats.missingTitleCount > 0 %}ci-stat-score-danger{% else %}ci-stat-score-good{% endif %}">
+                {{ stats.missingTitleCount }}
+            </div>
+            <div class="ci-stat-card-footer">{{ "Entries without meta titles"|t('content-intelligence') }}</div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Missing Descriptions"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value {% if stats.missingDescriptionCount > 0 %}ci-stat-score-danger{% else %}ci-stat-score-good{% endif %}">
+                {{ stats.missingDescriptionCount }}
+            </div>
+            <div class="ci-stat-card-footer">{{ "Entries without meta descriptions"|t('content-intelligence') }}</div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Image Alt Issues"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value {% if stats.missingAltCount > 0 %}ci-stat-score-warning{% else %}ci-stat-score-good{% endif %}">
+                {{ stats.missingAltCount }}
+            </div>
+            <div class="ci-stat-card-footer">{{ "Images missing alt or using filenames"|t('content-intelligence') }}</div>
+        </div>
+    </div>
+
+    <!-- SEO Entry Table -->
+    <div class="ci-panel">
+        <div class="ci-panel-header">
+            <h2>{{ "Entry SEO Health & Snippets"|t('content-intelligence') }} ({{ entries|length }})</h2>
+            <span class="ci-edition-badge ci-badge-lite">{{ "Lite Edition Active"|t('content-intelligence') }}</span>
+        </div>
+        <div class="ci-panel-body" style="padding: 0;">
+            {% if entries|length %}
+                <table class="data fullwidth">
+                    <thead>
+                        <tr>
+                            <th>{{ "Entry"|t('content-intelligence') }}</th>
+                            <th>{{ "SEO Score"|t('content-intelligence') }}</th>
+                            <th>{{ "Title Length"|t('content-intelligence') }}</th>
+                            <th>{{ "Meta Description"|t('content-intelligence') }}</th>
+                            <th>{{ "Images / Alt"|t('content-intelligence') }}</th>
+                            <th class="thin">{{ "Actions"|t('content-intelligence') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in entries %}
+                            {% set audit = audits[entry.id] ?? null %}
+                            {% set titleLen = entry.title|length %}
+                            <tr>
+                                <td>
+                                    <strong>
+                                        <a href="{{ url('content-intelligence/seo/' ~ entry.id) }}">
+                                            {{ entry.title|default('(Untitled)'|t('content-intelligence')) }}
+                                        </a>
+                                    </strong>
+                                    <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 2px;">
+                                        <code>{{ entry.slug }}</code>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if audit %}
+                                        <span class="ci-severity-badge {% if audit.seoScore >= 80 %}ci-severity-good{% elseif audit.seoScore >= 50 %}ci-severity-warning{% else %}ci-severity-critical{% endif %}">
+                                            {{ audit.seoScore }}/100
+                                        </span>
+                                    {% else %}
+                                        <span class="ci-severity-badge ci-severity-notice">{{ "Not Scanned"|t('content-intelligence') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if titleLen >= 30 and titleLen <= 60 %}
+                                        <span class="ci-severity-badge ci-severity-good">{{ titleLen }} chars</span>
+                                    {% elseif titleLen > 0 %}
+                                        <span class="ci-severity-badge ci-severity-warning">{{ titleLen }} chars</span>
+                                    {% else %}
+                                        <span class="ci-severity-badge ci-severity-critical">{{ "Missing"|t('content-intelligence') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if audit %}
+                                        {% if audit.seoScore < 70 %}
+                                            <span class="ci-severity-badge ci-severity-warning">{{ "Needs Attention"|t('content-intelligence') }}</span>
+                                        {% else %}
+                                            <span class="ci-severity-badge ci-severity-good">{{ "Audited"|t('content-intelligence') }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span style="color: #94a3b8;">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if audit %}
+                                        <span class="ci-severity-badge ci-severity-good">{{ "Audited"|t('content-intelligence') }}</span>
+                                    {% else %}
+                                        <span style="color: #94a3b8;">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ cpUrl('content-intelligence/seo/' ~ entry.id) }}" class="btn small">
+                                        {{ "Inspect SEO"|t('content-intelligence') }}
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div style="padding: 2rem; text-align: center; color: #64748b;">
+                    <p>{{ "No entries found in this site."|t('content-intelligence') }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

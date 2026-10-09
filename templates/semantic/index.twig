@@ -1,0 +1,337 @@
+{% extends "content-intelligence/_layouts/cp" %}
+
+{% set title = "Semantic Knowledge Base & Embeddings"|t('content-intelligence') %}
+{% set selectedSubnavItem = 'semantic' %}
+
+{% block pageActions %}
+    {% if hasAgency %}
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <form method="post" action="{{ cpUrl('content-intelligence/semantic/prune') }}" style="display: inline-block;">
+                {{ csrfInput() }}
+                {{ actionInput('content-intelligence/semantic/prune') }}
+                {{ redirectInput('content-intelligence/semantic') }}
+                <button type="submit" class="btn" title="{{ 'Remove orphaned chunks for deleted entries'|t('content-intelligence') }}">
+                    <span class="icon" data-icon="trash"></span>
+                    {{ "Prune Orphans"|t('content-intelligence') }}
+                </button>
+            </form>
+
+            <form method="post" action="{{ cpUrl('content-intelligence/semantic/run') }}" style="display: inline-block;">
+                {{ csrfInput() }}
+                {{ actionInput('content-intelligence/semantic/run-index') }}
+                {{ redirectInput('content-intelligence/semantic') }}
+                <button type="submit" class="btn submit">
+                    <span class="icon" data-icon="refresh"></span>
+                    {{ "Index Entire Website"|t('content-intelligence') }}
+                </button>
+            </form>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block ciContent %}
+    {% if not hasAgency %}
+        <div class="ci-upgrade-banner">
+            <h3>{{ "Upgrade to Agency for Semantic Knowledge Base & Vector Search"|t('content-intelligence') }}</h3>
+            <p>
+                {{ "Semantic Search transforms your Craft CMS content into high-dimensional vector embeddings with heading-aware intelligent chunking and hash-based incremental indexing. Unlocks deep content similarity, related content discovery, and AI retrieval (RAG)."|t('content-intelligence') }}
+            </p>
+            <p style="margin-top: 1rem;">
+                <a href="https://plugins.craftcms.com" target="_blank" rel="noopener" class="btn submit">
+                    {{ "Upgrade to Agency Edition"|t('content-intelligence') }}
+                </a>
+            </p>
+        </div>
+    {% endif %}
+
+    <!-- Semantic KPI Metrics -->
+    <div class="ci-stats-grid">
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Total Knowledge Chunks"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value ci-stat-score-good">
+                {{ stats.totalChunks }}
+            </div>
+            <div class="ci-stat-card-footer">{{ "Contextual heading-aware content blocks"|t('content-intelligence') }}</div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Indexed Knowledge Coverage"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value {% if stats.coveragePercentage >= 80 %}ci-stat-score-good{% elseif stats.coveragePercentage >= 40 %}ci-stat-score-warning{% else %}ci-stat-score-danger{% endif %}">
+                {{ stats.coveragePercentage }}%
+            </div>
+            <div class="ci-stat-card-footer">
+                {{ "{indexed} of {total} entries indexed"|t('content-intelligence', { indexed: stats.indexedEntriesCount, total: stats.totalEntries }) }}
+            </div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Average Chunks Per Entry"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value">
+                {{ stats.avgChunksPerEntry }}
+            </div>
+            <div class="ci-stat-card-footer">{{ "Granular semantic partitioning"|t('content-intelligence') }}</div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Vector Embedding Model"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value" style="font-size: 1.25rem; font-weight: 600; padding: 0.5rem 0;">
+                {{ vectorHealth.embeddingModel }}
+            </div>
+            <div class="ci-stat-card-footer">
+                {% if vectorHealth.configured %}
+                    <span class="ci-severity-badge ci-severity-good">{{ "Vector DB Active"|t('content-intelligence') }}</span>
+                {% else %}
+                    <span class="ci-severity-badge ci-severity-notice">{{ "MySQL Embeddings Ready"|t('content-intelligence') }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Storage Engine Details Panel -->
+    <div class="ci-panel" style="margin-bottom: 2rem;">
+        <div class="ci-panel-header">
+            <h2>{{ "Vector Storage Engine & Pipeline"|t('content-intelligence') }}</h2>
+            <span class="ci-edition-badge ci-badge-agency">{{ "Agency Architecture"|t('content-intelligence') }}</span>
+        </div>
+        <div class="ci-panel-body" style="display: flex; gap: 2rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 300px;">
+                <p style="margin-top: 0; color: #4b5563; line-height: 1.5;">
+                    {{ "The Agency indexing engine breaks your Craft entries into semantically coherent paragraphs under contextual heading hierarchies. Every chunk calculates a SHA-256 fingerprint, guaranteeing 0 API cost and instant re-indexing for unchanged content."|t('content-intelligence') }}
+                </p>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    <a href="{{ cpUrl('content-intelligence/settings') }}" class="btn">
+                        <span class="icon" data-icon="settings"></span>
+                        {{ "Configure Vector Store & Model"|t('content-intelligence') }}
+                    </a>
+                </div>
+            </div>
+            <div style="flex: 1; min-width: 300px;">
+                <table class="data fullwidth" style="margin: 0;">
+                    <tr>
+                        <td style="width: 35%;"><strong>{{ "Storage Engine"|t('content-intelligence') }}</strong></td>
+                        <td>{{ vectorHealth.store }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>{{ "Qdrant Cluster"|t('content-intelligence') }}</strong></td>
+                        <td><code>{{ vectorHealth.endpoint ?: 'Not configured (Local MySQL store active)' }}</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>{{ "Collection Name"|t('content-intelligence') }}</strong></td>
+                        <td><code>{{ vectorHealth.collection ?: 'craft_content_agency' }}</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>{{ "Last Site Index"|t('content-intelligence') }}</strong></td>
+                        <td>{{ stats.latestIndexedDate ? stats.latestIndexedDate|datetime('short') : 'Never'|t('content-intelligence') }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hybrid Search Testing Playground Panel -->
+    <div class="ci-panel" style="margin-bottom: 2rem;">
+        <div class="ci-panel-header">
+            <h2>{{ "Interactive Hybrid Search Tester"|t('content-intelligence') }}</h2>
+            <span class="ci-edition-badge ci-badge-agency">{{ "Vector & Lexical Fusion"|t('content-intelligence') }}</span>
+        </div>
+        <div class="ci-panel-body">
+            <p style="color: #64748b; font-size: 0.95rem; margin-top: 0; margin-bottom: 1rem;">
+                {{ "Test how your content is retrieved and ranked using Reciprocal Rank Fusion (RRF) combining vector embeddings and keyword fulltext signals."|t('content-intelligence') }}
+            </p>
+            <div style="display: flex; gap: 0.75rem; align-items: center;">
+                <input type="text" id="ci-hybrid-search-input" class="text fullwidth" placeholder="{{ 'Search concepts, questions, or exact phrases (e.g. senior care, products, sustainable)...'|t('content-intelligence') }}" style="font-size: 1rem; padding: 0.6rem 0.8rem;">
+                <button type="button" id="ci-hybrid-search-btn" class="btn submit" style="white-space: nowrap; height: 38px;">
+                    <span class="icon" data-icon="search"></span>
+                    {{ "Search Knowledge Base"|t('content-intelligence') }}
+                </button>
+                <span id="ci-search-spinner" class="spinner hidden"></span>
+            </div>
+
+            <!-- Search Results Container -->
+            <div id="ci-search-results-box" style="margin-top: 1.5rem; display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
+                    <h3 style="margin: 0; font-size: 1rem; color: #1e293b;" id="ci-search-summary-text"></h3>
+                    <span id="ci-search-count-pill" class="ci-severity-badge ci-severity-good"></span>
+                </div>
+                <div id="ci-search-results-list" style="display: flex; flex-direction: column; gap: 1rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indexed Entries Table -->
+    <div class="ci-panel">
+        <div class="ci-panel-header">
+            <h2>{{ "Entries Knowledge Base Status"|t('content-intelligence') }}</h2>
+            <span style="font-size: 0.85rem; color: #718096;">
+                {{ "{count} entries in current site"|t('content-intelligence', { count: entriesList|length }) }}
+            </span>
+        </div>
+        <div class="ci-panel-body" style="padding: 0;">
+            {% if entriesList|length == 0 %}
+                <div style="padding: 2.5rem; text-align: center; color: #718096;">
+                    <p>{{ "No section entries found in the current site."|t('content-intelligence') }}</p>
+                </div>
+            {% else %}
+                <table class="data fullwidth" style="margin: 0;">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 1.5rem;">{{ "Entry Title"|t('content-intelligence') }}</th>
+                            <th>{{ "Section"|t('content-intelligence') }}</th>
+                            <th>{{ "Status"|t('content-intelligence') }}</th>
+                            <th>{{ "Indexed Chunks"|t('content-intelligence') }}</th>
+                            <th>{{ "Last Indexed"|t('content-intelligence') }}</th>
+                            <th style="text-align: right; padding-right: 1.5rem;">{{ "Actions"|t('content-intelligence') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in entriesList %}
+                            {% set entry = item.entry %}
+                            <tr>
+                                <td style="padding-left: 1.5rem; font-weight: 600;">
+                                    <a href="{{ entry.getCpEditUrl() }}" title="{{ 'Edit entry in Craft CP'|t('content-intelligence') }}">
+                                        {{ entry.title }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge">{{ entry.section.name ?? 'Single' }}</span>
+                                </td>
+                                <td>
+                                    {% if entry.status == 'live' %}
+                                        <span class="status live" title="Live"></span>
+                                        <span style="font-size: 0.85rem; color: #10b981;">{{ "Live"|t('content-intelligence') }}</span>
+                                    {% else %}
+                                        <span class="status disabled" title="Disabled"></span>
+                                        <span style="font-size: 0.85rem; color: #94a3b8;">{{ "Disabled"|t('content-intelligence') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.chunkCount > 0 %}
+                                        <span class="ci-severity-badge ci-severity-good">
+                                            {{ "{count} chunks"|t('content-intelligence', { count: item.chunkCount }) }}
+                                        </span>
+                                    {% else %}
+                                        <span class="ci-severity-badge ci-severity-notice">
+                                            {{ "Not Indexed"|t('content-intelligence') }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td style="font-size: 0.85rem; color: #64748b;">
+                                    {{ item.lastIndexed ? item.lastIndexed|datetime('short') : '—' }}
+                                </td>
+                                <td style="text-align: right; padding-right: 1.5rem;">
+                                    <div style="display: inline-flex; gap: 0.4rem; align-items: center;">
+                                        {% if item.chunkCount > 0 %}
+                                            <a href="{{ cpUrl('content-intelligence/semantic/chunks/' ~ entry.id) }}" class="btn small" title="{{ 'View chunks breakdown'|t('content-intelligence') }}">
+                                                <span class="icon" data-icon="view"></span>
+                                                {{ "Inspect Chunks"|t('content-intelligence') }}
+                                            </a>
+                                        {% endif %}
+
+                                        <form method="post" action="{{ cpUrl('content-intelligence/semantic/index-entry/' ~ entry.id) }}" style="display: inline-block;">
+                                            {{ csrfInput() }}
+                                            {{ actionInput('content-intelligence/semantic/index-entry') }}
+                                            <input type="hidden" name="entryId" value="{{ entry.id }}">
+                                            {{ redirectInput('content-intelligence/semantic') }}
+                                            <button type="submit" class="btn small submit" title="{{ 'Chunk and index this entry now'|t('content-intelligence') }}">
+                                                <span class="icon" data-icon="refresh"></span>
+                                                {{ item.chunkCount > 0 ? "Re-index"|t('content-intelligence') : "Index Now"|t('content-intelligence') }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+    </div>
+
+    {% js %}
+        var hasAgency = {{ hasAgency ? 'true' : 'false' }};
+
+        function executeHybridSearch() {
+            if (!hasAgency) {
+                Craft.cp.displayNotice('{{ "Semantic Search & Embeddings require Content Intelligence Agency edition. Please upgrade your license to unlock."|t("content-intelligence")|e("js") }}');
+                return;
+            }
+
+            var query = $('#ci-hybrid-search-input').val().trim();
+            if (!query) return;
+
+            var $btn = $('#ci-hybrid-search-btn');
+            var $spinner = $('#ci-search-spinner');
+            var $resultsBox = $('#ci-search-results-box');
+            var $resultsList = $('#ci-search-results-list');
+            var $summary = $('#ci-search-summary-text');
+            var $countPill = $('#ci-search-count-pill');
+
+            $btn.addClass('disabled');
+            $spinner.removeClass('hidden');
+
+            Craft.postActionRequest('content-intelligence/semantic/search', {
+                query: query,
+                limit: 6
+            }, function(response, textStatus) {
+                $btn.removeClass('disabled');
+                $spinner.addClass('hidden');
+                $resultsBox.show();
+                $resultsList.empty();
+
+                if (!response.success) {
+                    $summary.text('Search failed');
+                    $countPill.text('Error').removeClass('ci-severity-good').addClass('ci-severity-critical');
+                    $resultsList.html('<p style="color: #ef4444;">' + (response.message || 'An error occurred.') + '</p>');
+                    return;
+                }
+
+                var results = response.results || [];
+                $summary.text('Search Results for: "' + query + '"');
+                $countPill.text(results.length + ' matches').removeClass('ci-severity-critical').addClass('ci-severity-good');
+
+                if (results.length === 0) {
+                    $resultsList.html('<p style="color: #64748b; padding: 1rem 0;">No matching content chunks found for this query.</p>');
+                    return;
+                }
+
+                results.forEach(function(res, idx) {
+                    var sourceBadge = '<span class="ci-severity-badge ci-severity-good">Hybrid (' + res.score + ')</span>';
+                    if (res.source === 'semantic') {
+                        sourceBadge = '<span class="ci-severity-badge ci-severity-notice">Semantic (' + res.semanticScore + '%)</span>';
+                    } else if (res.source === 'lexical') {
+                        sourceBadge = '<span class="ci-severity-badge ci-severity-warning">Lexical (' + res.lexicalScore + '%)</span>';
+                    }
+
+                    var cardHtml = '<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1.25rem;">' +
+                        '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">' +
+                            '<div>' +
+                                '<span class="badge" style="margin-right: 0.5rem;">' + (res.sectionName || 'Single') + '</span>' +
+                                '<strong style="font-size: 1.05rem;"><a href="' + (res.entryUrl || '#') + '" target="_blank">' + res.entryTitle + '</a></strong>' +
+                                '<span style="color: #64748b; margin-left: 0.5rem;">&rsaquo; ' + res.heading + '</span>' +
+                            '</div>' +
+                            '<div>' + sourceBadge + '</div>' +
+                        '</div>' +
+                        '<div style="margin: 0.5rem 0; font-size: 0.95rem; line-height: 1.5; color: #334155;">' + res.snippet + '</div>' +
+                        '<div style="font-size: 0.8rem; color: #94a3b8; display: flex; gap: 1.5rem; margin-top: 0.5rem;">' +
+                            '<span><strong>Chunk:</strong> #' + res.chunkIndex + '</span>' +
+                            '<span><strong>Semantic Match:</strong> ' + res.semanticScore + '%</span>' +
+                            '<span><strong>Keyword Match:</strong> ' + res.lexicalScore + '%</span>' +
+                            '<a href="' + Craft.getUrl('content-intelligence/semantic/chunks/' + res.entryId) + '" style="margin-left: auto;">Inspect Chunk &rarr;</a>' +
+                        '</div>' +
+                    '</div>';
+
+                    $resultsList.append(cardHtml);
+                });
+            });
+        }
+
+        $('#ci-hybrid-search-btn').on('click', executeHybridSearch);
+        $('#ci-hybrid-search-input').on('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                executeHybridSearch();
+            }
+        });
+    {% endjs %}
+{% endblock %}
+

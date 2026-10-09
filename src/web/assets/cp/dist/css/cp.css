@@ -1,0 +1,192 @@
+/**
+ * Content Intelligence - Control Panel Styles
+ * Follows Craft CMS UI patterns and typography
+ */
+
+.ci-container {
+    margin-top: 1.5rem;
+    max-width: 1400px;
+}
+
+.ci-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--gray-200, #e2e8f0);
+}
+
+.ci-header-title h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--gray-900, #1a202c);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.ci-header-subtitle {
+    margin-top: 0.25rem;
+    color: var(--gray-600, #718096);
+    font-size: 0.95rem;
+}
+
+.ci-edition-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.ci-badge-lite {
+    background-color: #e2e8f0;
+    color: #4a5568;
+}
+
+.ci-badge-pro {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.ci-badge-agency {
+    background-color: #fce7f3;
+    color: #9d174d;
+}
+
+/* Stats Overview Grid */
+.ci-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.ci-stat-card {
+    background: #ffffff;
+    border: 1px solid var(--gray-200, #e2e8f0);
+    border-radius: 8px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.ci-stat-card-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--gray-500, #a0aec0);
+    letter-spacing: 0.05em;
+}
+
+.ci-stat-card-value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--gray-800, #2d3748);
+    margin: 0.5rem 0;
+}
+
+.ci-stat-card-footer {
+    font-size: 0.85rem;
+    color: var(--gray-600, #718096);
+}
+
+.ci-stat-score-good { color: #10b981; }
+.ci-stat-score-warning { color: #f59e0b; }
+.ci-stat-score-danger { color: #ef4444; }
+
+/* Panels & Cards */
+.ci-panel {
+    background: #ffffff;
+    border: 1px solid var(--gray-200, #e2e8f0);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.ci-panel-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--gray-200, #e2e8f0);
+    background: #f8fafc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ci-panel-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gray-800, #2d3748);
+}
+
+.ci-panel-body {
+    padding: 1.5rem;
+}
+
+/* Feature Upgrade Notice Card */
+.ci-upgrade-banner {
+    background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 1.75rem;
+    margin-bottom: 2rem;
+}
+
+.ci-upgrade-banner h3 {
+    margin-top: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #0369a1;
+}
+
+.ci-upgrade-banner p {
+    color: #334155;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Issue Badges */
+.ci-severity-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.ci-severity-critical { background: #fee2e2; color: #991b1b; }
+.ci-severity-warning { background: #fef3c7; color: #92400e; }
+.ci-severity-notice { background: #e0f2fe; color: #075985; }
+.ci-severity-good { background: #dcfce7; color: #166534; }
+
+/* Slideout & AI Styles */
+.ci-slideout-container {
+    width: 720px;
+    max-width: 90vw;
+}
+
+.diff-ins {
+    background-color: #dcfce7;
+    color: #166534;
+    text-decoration: none;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+.diff-del {
+    background-color: #fee2e2;
+    color: #991b1b;
+    text-decoration: line-through;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+

@@ -1,0 +1,157 @@
+{% extends "content-intelligence/_layouts/cp" %}
+
+{% set title = "Content Audit"|t('content-intelligence') %}
+{% set selectedSubnavItem = 'audit' %}
+
+{% block pageActions %}
+    <a href="{{ cpUrl('content-intelligence/audit/export') }}" class="btn" style="margin-right: 0.5rem;">
+        <span class="icon" data-icon="download"></span>
+        {{ "Export Report (CSV)"|t('content-intelligence') }}
+    </a>
+    <form method="post" action="{{ cpUrl('content-intelligence/audit/run') }}" style="display: inline-block;">
+        {{ csrfInput() }}
+        {{ actionInput('content-intelligence/audit/run') }}
+        {{ redirectInput('content-intelligence/audit') }}
+        <button type="submit" class="btn submit">
+            <span class="icon" data-icon="refresh"></span>
+            {{ "Scan Entire Site"|t('content-intelligence') }}
+        </button>
+    </form>
+{% endblock %}
+
+{% block ciContent %}
+    <!-- Audit KPI Metrics -->
+    <div class="ci-stats-grid">
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Average Content Score"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value {% if stats.avgContentScore >= 80 %}ci-stat-score-good{% elseif stats.avgContentScore >= 50 %}ci-stat-score-warning{% else %}ci-stat-score-danger{% endif %}">
+                {{ stats.avgContentScore }}/100
+            </div>
+            <div class="ci-stat-card-footer">{{ "Evaluated across {count} audited entries"|t('content-intelligence', { count: stats.analyzedCount }) }}</div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Audited Coverage"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value">
+                {{ stats.analyzedCount }} / {{ stats.totalEntries }}
+            </div>
+            <div class="ci-stat-card-footer">
+                {% if stats.totalEntries > 0 %}
+                    {{ (stats.analyzedCount / stats.totalEntries * 100)|round }}% {{ "of total site entries"|t('content-intelligence') }}
+                {% else %}
+                    0%
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Critical Content Issues"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value {% if stats.criticalIssues > 0 %}ci-stat-score-danger{% else %}ci-stat-score-good{% endif %}">
+                {{ stats.criticalIssues }}
+            </div>
+            <div class="ci-stat-card-footer">{{ "Thin content, missing titles, empty bodies"|t('content-intelligence') }}</div>
+        </div>
+
+        <div class="ci-stat-card">
+            <div class="ci-stat-card-title">{{ "Warnings & Notices"|t('content-intelligence') }}</div>
+            <div class="ci-stat-card-value {% if stats.warningIssues > 0 %}ci-stat-score-warning{% else %}ci-stat-score-good{% endif %}">
+                {{ stats.warningIssues }}
+            </div>
+            <div class="ci-stat-card-footer">{{ "{count} freshness / heading structure warnings"|t('content-intelligence', { count: stats.warningIssues }) }}</div>
+        </div>
+    </div>
+
+    <!-- Entries Audit Table -->
+    <div class="ci-panel">
+        <div class="ci-panel-header">
+            <h2>{{ "Entry Content Audit Breakdown"|t('content-intelligence') }} ({{ entries|length }})</h2>
+            <span class="ci-edition-badge ci-badge-lite">{{ "Lite Edition Active"|t('content-intelligence') }}</span>
+        </div>
+        <div class="ci-panel-body" style="padding: 0;">
+            {% if entries|length %}
+                <table class="data fullwidth">
+                    <thead>
+                        <tr>
+                            <th>{{ "Entry Title"|t('content-intelligence') }}</th>
+                            <th>{{ "Section"|t('content-intelligence') }}</th>
+                            <th>{{ "Content Score"|t('content-intelligence') }}</th>
+                            <th>{{ "Issues"|t('content-intelligence') }}</th>
+                            <th>{{ "Last Updated"|t('content-intelligence') }}</th>
+                            <th class="thin">{{ "Actions"|t('content-intelligence') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in entries %}
+                            {% set audit = audits[entry.id] ?? null %}
+                            <tr>
+                                <td>
+                                    <strong>
+                                        <a href="{{ url('content-intelligence/audit/' ~ entry.id) }}">
+                                            {{ entry.title|default('(Untitled)'|t('content-intelligence')) }}
+                                        </a>
+                                    </strong>
+                                    <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 2px;">
+                                        <a href="{{ entry.cpEditUrl }}" target="_blank" rel="noopener">
+                                            {{ "Edit in Craft"|t('content-intelligence') }} &nearr;
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status {{ entry.status }}"></span>
+                                    {{ entry.section.name ?? '-' }}
+                                </td>
+                                <td>
+                                    {% if audit %}
+                                        <span class="ci-severity-badge {% if audit.contentScore >= 80 %}ci-severity-good{% elseif audit.contentScore >= 50 %}ci-severity-warning{% else %}ci-severity-critical{% endif %}">
+                                            {{ audit.contentScore }}/100
+                                        </span>
+                                    {% else %}
+                                        <span class="ci-severity-badge ci-severity-notice">{{ "Not Scanned"|t('content-intelligence') }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if audit %}
+                                        {% if audit.criticalCount > 0 %}
+                                            <span class="ci-severity-badge ci-severity-critical">{{ audit.criticalCount }} {{ "Critical"|t('content-intelligence') }}</span>
+                                        {% endif %}
+                                        {% if audit.warningCount > 0 %}
+                                            <span class="ci-severity-badge ci-severity-warning">{{ audit.warningCount }} {{ "Warn"|t('content-intelligence') }}</span>
+                                        {% endif %}
+                                        {% if audit.criticalCount == 0 and audit.warningCount == 0 %}
+                                            <span class="ci-severity-badge ci-severity-good">{{ "Healthy"|t('content-intelligence') }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span style="color: #94a3b8;">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ entry.dateUpdated ? entry.dateUpdated|datetime('short') : '-' }}
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <a href="{{ cpUrl('content-intelligence/audit/' ~ entry.id) }}" class="btn small">
+                                            {{ "Inspect"|t('content-intelligence') }}
+                                        </a>
+                                        <form method="post" action="{{ cpUrl('content-intelligence/audit/audit-entry/' ~ entry.id) }}" style="display: inline;">
+                                            {{ csrfInput() }}
+                                            {{ actionInput('content-intelligence/audit/audit-entry') }}
+                                            <input type="hidden" name="entryId" value="{{ entry.id }}">
+                                            {{ redirectInput('content-intelligence/audit') }}
+                                            <button type="submit" class="btn small" title="{{ 'Re-scan this entry'|t('content-intelligence') }}">
+                                                {{ "Scan"|t('content-intelligence') }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div style="padding: 2rem; text-align: center; color: #64748b;">
+                    <p>{{ "No entries found in this site to audit."|t('content-intelligence') }}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
