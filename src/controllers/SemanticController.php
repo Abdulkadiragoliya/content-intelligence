@@ -120,7 +120,10 @@ class SemanticController extends Controller
             return $this->redirectToPostedUrl(null, 'content-intelligence/semantic');
         }
 
-        $site = Craft::$app->getSites()->getCurrentSite();
+        $siteHandle = (string)$this->request->getParam('site');
+        $site = $siteHandle ? Craft::$app->getSites()->getSiteByHandle($siteHandle) : null;
+        $site = $site ?? Craft::$app->getSites()->getCurrentSite();
+
         $entry = Entry::find()->id($entryId)->siteId($site->id)->status(null)->one();
 
         if (!$entry) {
@@ -173,7 +176,9 @@ class SemanticController extends Controller
         $this->requirePermission('contentIntelligence:manageKnowledgeBase');
 
         $plugin = Plugin::getInstance();
-        $site = Craft::$app->getSites()->getCurrentSite();
+        $siteHandle = (string)$this->request->getParam('site');
+        $site = $siteHandle ? Craft::$app->getSites()->getSiteByHandle($siteHandle) : null;
+        $site = $site ?? Craft::$app->getSites()->getCurrentSite();
 
         $entry = Entry::find()->id($entryId)->siteId($site->id)->status(null)->one();
         if (!$entry) {

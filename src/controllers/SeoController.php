@@ -54,7 +54,9 @@ class SeoController extends Controller
         $this->requirePermission('contentIntelligence:runAudits');
 
         $plugin = Plugin::getInstance();
-        $site = Craft::$app->getSites()->getCurrentSite();
+        $siteHandle = (string)$this->request->getParam('site');
+        $site = $siteHandle ? Craft::$app->getSites()->getSiteByHandle($siteHandle) : null;
+        $site = $site ?? Craft::$app->getSites()->getCurrentSite();
 
         $entry = Craft::$app->getEntries()->getEntryById($entryId, $site->id)
             ?? Craft::$app->getElements()->getElementById($entryId, Entry::class, $site->id)

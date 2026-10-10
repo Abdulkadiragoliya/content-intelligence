@@ -55,7 +55,9 @@ class AuditController extends Controller
         $this->requirePermission('contentIntelligence:runAudits');
 
         $plugin = Plugin::getInstance();
-        $site = Craft::$app->getSites()->getCurrentSite();
+        $siteHandle = (string)$this->request->getParam('site');
+        $site = $siteHandle ? Craft::$app->getSites()->getSiteByHandle($siteHandle) : null;
+        $site = $site ?? Craft::$app->getSites()->getCurrentSite();
 
         $entry = Craft::$app->getEntries()->getEntryById($entryId, $site->id)
             ?? Craft::$app->getElements()->getElementById($entryId, Entry::class, $site->id)
@@ -109,6 +111,10 @@ class AuditController extends Controller
         $this->requirePermission('contentIntelligence:runAudits');
 
         $entryId = $entryId ?? (int)$this->request->getParam('entryId');
+        $siteHandle = (string)$this->request->getParam('site');
+        $site = $siteHandle ? Craft::$app->getSites()->getSiteByHandle($siteHandle) : null;
+        $site = $site ?? Craft::$app->getSites()->getCurrentSite();
+
         $entry = Craft::$app->getEntries()->getEntryById($entryId, $site->id)
             ?? Craft::$app->getElements()->getElementById($entryId, Entry::class, $site->id)
             ?? Entry::find()->id($entryId)->siteId($site->id)->status(null)->one();
