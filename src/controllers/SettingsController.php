@@ -25,7 +25,8 @@ class SettingsController extends Controller
             'settings' => $plugin->getSettings(),
             'edition' => $plugin->getActiveEdition(),
             'hasPro' => $plugin->hasPro(),
-            'hasAgency' => $plugin->hasAgency(),
+            'hasPlus' => $plugin->hasPlus(),
+            'hasAgency' => $plugin->hasPlus(),
         ]);
     }
 

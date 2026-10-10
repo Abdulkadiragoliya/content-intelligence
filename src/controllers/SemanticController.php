@@ -11,7 +11,7 @@ use abdulkadiragoliya\contentintelligence\Plugin;
 use abdulkadiragoliya\contentintelligence\jobs\IndexContentJob;
 
 /**
- * Controller for Semantic Search, Chunking & Embeddings (Agency Edition).
+ * Controller for Semantic Search, Chunking & Embeddings (Plus Edition).
  */
 class SemanticController extends Controller
 {
@@ -29,10 +29,10 @@ class SemanticController extends Controller
             return true;
         }
 
-        if (!Plugin::getInstance()->hasAgency()) {
+        if (!Plugin::getInstance()->hasPlus()) {
             $this->response->data = [
                 'success' => false,
-                'message' => Craft::t('content-intelligence', 'Semantic Search & Embeddings require Content Intelligence Agency edition. Please upgrade your license to unlock.'),
+                'message' => Craft::t('content-intelligence', 'Semantic Search & Embeddings require Content Intelligence Plus edition. Please upgrade your license to unlock.'),
                 'upgradeRequired' => true,
             ];
             $this->response->format = \yii\web\Response::FORMAT_JSON;
@@ -51,9 +51,9 @@ class SemanticController extends Controller
 
         $plugin = Plugin::getInstance();
         $site = Craft::$app->getSites()->getCurrentSite();
-        $hasAgency = $plugin->hasAgency();
+        $hasPlus = $plugin->hasPlus();
 
-        $stats = $hasAgency ? $plugin->vector->getIndexStats($site->id) : [
+        $stats = $hasPlus ? $plugin->vector->getIndexStats($site->id) : [
             'totalEntries' => 0,
             'indexedEntriesCount' => 0,
             'unindexedEntriesCount' => 0,
@@ -63,12 +63,13 @@ class SemanticController extends Controller
             'avgChunksPerEntry' => 0,
         ];
 
-        $entriesList = $hasAgency ? $plugin->vector->getIndexedEntriesList($site->id) : [];
+        $entriesList = $hasPlus ? $plugin->vector->getIndexedEntriesList($site->id) : [];
         $health = $plugin->vector->getHealthStatus();
 
         return $this->renderTemplate('content-intelligence/semantic/index', [
             'edition' => $plugin->getActiveEdition(),
-            'hasAgency' => $hasAgency,
+            'hasPlus' => $hasPlus,
+            'hasAgency' => $hasPlus,
             'currentSite' => $site,
             'stats' => $stats,
             'entriesList' => $entriesList,
@@ -88,8 +89,8 @@ class SemanticController extends Controller
         }
 
         $plugin = Plugin::getInstance();
-        if (!$plugin->hasAgency()) {
-            $this->setFailFlash(Craft::t('content-intelligence', 'Semantic indexing requires Agency edition.'));
+        if (!$plugin->hasPlus()) {
+            $this->setFailFlash(Craft::t('content-intelligence', 'Semantic indexing requires Plus edition.'));
             return $this->redirectToPostedUrl(null, 'content-intelligence/semantic');
         }
 
@@ -114,8 +115,8 @@ class SemanticController extends Controller
         $entryId = $entryId ?? (int)$this->request->getParam('entryId');
 
         $plugin = Plugin::getInstance();
-        if (!$plugin->hasAgency()) {
-            $this->setFailFlash(Craft::t('content-intelligence', 'Semantic indexing requires Agency edition.'));
+        if (!$plugin->hasPlus()) {
+            $this->setFailFlash(Craft::t('content-intelligence', 'Semantic indexing requires Plus edition.'));
             return $this->redirectToPostedUrl(null, 'content-intelligence/semantic');
         }
 
@@ -150,8 +151,8 @@ class SemanticController extends Controller
         }
 
         $plugin = Plugin::getInstance();
-        if (!$plugin->hasAgency()) {
-            $this->setFailFlash(Craft::t('content-intelligence', 'Agency edition required.'));
+        if (!$plugin->hasPlus()) {
+            $this->setFailFlash(Craft::t('content-intelligence', 'Plus edition required.'));
             return $this->redirectToPostedUrl(null, 'content-intelligence/semantic');
         }
 
@@ -198,10 +199,10 @@ class SemanticController extends Controller
         $this->requirePermission('contentIntelligence:manageKnowledgeBase');
 
         $plugin = Plugin::getInstance();
-        if (!$plugin->hasAgency()) {
+        if (!$plugin->hasPlus()) {
             return $this->asJson([
                 'success' => false,
-                'message' => Craft::t('content-intelligence', 'Hybrid search requires Agency edition.'),
+                'message' => Craft::t('content-intelligence', 'Hybrid search requires Plus edition.'),
             ]);
         }
 

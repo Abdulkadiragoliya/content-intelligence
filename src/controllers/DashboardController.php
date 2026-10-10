@@ -28,7 +28,8 @@ class DashboardController extends Controller
             'stats' => $stats,
             'edition' => $edition,
             'hasPro' => $plugin->hasPro(),
-            'hasAgency' => $plugin->hasAgency(),
+            'hasPlus' => $plugin->hasPlus(),
+            'hasAgency' => $plugin->hasPlus(),
             'currentSite' => $site,
         ]);
     }

@@ -11,7 +11,7 @@ use abdulkadiragoliya\contentintelligence\services\vector\QdrantClient;
 
 /**
  * Service managing intelligent semantic chunking, hash-based incremental indexing,
- * vector embeddings, Qdrant synchronization, and hybrid search for Agency edition.
+ * vector embeddings, Qdrant synchronization, and hybrid search for Plus edition.
  */
 class VectorService extends Component
 {
@@ -178,7 +178,7 @@ class VectorService extends Component
      */
     public function indexEntry(Entry $entry, bool $generateVectors = true): array
     {
-        $this->requireAgencyEdition();
+        $this->requirePlusEdition();
 
         $chunks = $this->chunkEntry($entry);
         $siteId = $entry->siteId;
@@ -303,7 +303,7 @@ class VectorService extends Component
      */
     public function indexSite(int $siteId, bool $generateVectors = true): array
     {
-        $this->requireAgencyEdition();
+        $this->requirePlusEdition();
 
         $entries = Entry::find()
             ->siteId($siteId)
@@ -344,7 +344,7 @@ class VectorService extends Component
      */
     public function hybridSearch(string $query, int $siteId, int $limit = 5, array $options = []): array
     {
-        $this->requireAgencyEdition();
+        $this->requirePlusEdition();
 
         $cleanQuery = trim($query);
         if (empty($cleanQuery)) {
@@ -695,12 +695,20 @@ class VectorService extends Component
     }
 
     /**
-     * Enforce Agency edition requirement.
+     * Enforce Plus edition requirement.
+     */
+    protected function requirePlusEdition(): void
+    {
+        if (!Plugin::getInstance()->hasPlus()) {
+            throw new \RuntimeException('Semantic Search and Vector Knowledge Base requires Content Intelligence Plus edition.');
+        }
+    }
+
+    /**
+     * Compatibility alias for requirePlusEdition.
      */
     protected function requireAgencyEdition(): void
     {
-        if (!Plugin::getInstance()->hasAgency()) {
-            throw new \RuntimeException('Semantic Search and Vector Knowledge Base requires Content Intelligence Agency edition.');
-        }
+        $this->requirePlusEdition();
     }
 }

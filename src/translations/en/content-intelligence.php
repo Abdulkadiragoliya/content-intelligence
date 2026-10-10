@@ -12,8 +12,8 @@ return [
     'Settings' => 'Settings',
     'Scan Entire Site' => 'Scan Entire Site',
     'Run Content & SEO Audits' => 'Run Content & SEO Audits',
-    'Use AI Assistant (Pro/Agency)' => 'Use AI Assistant (Pro/Agency)',
-    'Manage Semantic Index & Knowledge Base (Agency)' => 'Manage Semantic Index & Knowledge Base (Agency)',
-    'Use Ask Your Website RAG (Agency)' => 'Use Ask Your Website RAG (Agency)',
+    'Use AI Assistant (Pro/Plus)' => 'Use AI Assistant (Pro/Plus)',
+    'Manage Semantic Index & Knowledge Base (Plus)' => 'Manage Semantic Index & Knowledge Base (Plus)',
+    'Use Ask Your Website RAG (Plus)' => 'Use Ask Your Website RAG (Plus)',
     'Manage Plugin Settings' => 'Manage Plugin Settings',
 ];

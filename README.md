@@ -26,7 +26,7 @@ Content Intelligence is a production-grade, commercial Craft CMS 5 plugin design
 * **Deep AI SEO Intelligence**: Single-pass semantic audit identifying search intent (informational, commercial, navigational, transactional), content depth gaps, semantic entities, and competitive differentiation opportunities.
 * **Strict Human-in-the-Loop**: All AI suggestions require explicit human approval and staging before being applied to Craft entries.
 
-### 🟣 Agency Edition ($249/yr)
+### 🟣 Plus Edition ($249/yr)
 * *Everything in Pro, plus:*
 * **Intelligent Heading-Aware Chunking**: Hierarchically partitions entry content into coherent ~400-word sections under document heading contexts.
 * **Incremental Hash-Based Indexing**: SHA-256 fingerprinting skips unchanged chunks during bulk scans (zero API cost and instant re-indexes).
@@ -42,8 +42,8 @@ Content Intelligence is a production-grade, commercial Craft CMS 5 plugin design
 * Craft CMS `^5.0.0`
 * PHP `^8.2.0`
 * MySQL 8.0+ or PostgreSQL 13+
-* Optional (Pro/Agency): OpenAI API key (`gpt-4o-mini`, `gpt-4o`, `text-embedding-3-small`)
-* Optional (Agency): Qdrant cluster (Local Docker or Qdrant Cloud)
+* Optional (Pro/Plus): OpenAI API key (`gpt-4o-mini`, `gpt-4o`, `text-embedding-3-small`)
+* Optional (Plus): Qdrant cluster (Local Docker or Qdrant Cloud)
 
 ---
 
@@ -61,14 +61,14 @@ php craft plugin/install content-intelligence
 Add any of the following optional environment variables to your `.env` file:
 
 ```env
-# Local Development Only: test different tiers (lite | pro | agency)
+# Local Development Only: test different tiers (lite | pro | plus)
 # (In production, the edition is securely managed by your Craft Plugin Store license)
-CONTENT_INTELLIGENCE_EDITION=agency
+CONTENT_INTELLIGENCE_EDITION=plus
 
-# OpenAI API Key (Pro & Agency)
+# OpenAI API Key (Pro & Plus)
 OPENAI_API_KEY=sk-...
 
-# Qdrant Vector DB (Agency)
+# Qdrant Vector DB (Plus)
 QDRANT_URL=http://localhost:6333
 QDRANT_API_KEY=
 QDRANT_COLLECTION=content_intelligence
@@ -119,7 +119,7 @@ Access Content Intelligence metrics and recommendations directly in your fronten
 {% endif %}
 ```
 
-### Semantic Related Entries (Agency)
+### Semantic Related Entries (Plus)
 ```twig
 {# Recommend 3 semantically related entries based on vector embeddings #}
 {% set related = craft.contentIntelligence.getRelatedEntries(entry.id, 3) %}
@@ -134,7 +134,7 @@ Access Content Intelligence metrics and recommendations directly in your fronten
 </div>
 ```
 
-### Hybrid Frontend Search (Agency)
+### Hybrid Frontend Search (Plus)
 ```twig
 {% set results = craft.contentIntelligence.search(craft.app.request.getQueryParam('q'), 5) %}
 
@@ -149,7 +149,7 @@ Access Content Intelligence metrics and recommendations directly in your fronten
 
 ---
 
-### Export Audit Reports (Agency)
+### Export Audit Reports (Plus)
 ```bash
 # Export CSV directly from the Control Panel or visit:
 # admin/content-intelligence/audit/export
@@ -201,7 +201,7 @@ Content Intelligence is architected from the ground up for **Craft Cloud** and c
 * **Editions & Pricing**:
   * **Lite**: Free (Deterministic Content & SEO Audits, Scoring)
   * **Pro**: $99 / year (BYOK AI Assistant, Native Slideout, SERP & SEO Intelligence)
-  * **Agency**: $249 / year (Qdrant Vector DB, Hybrid Search, "Ask Your Website" RAG, Agency CSV Export)
+  * **Plus**: $249 / year (Qdrant Vector DB, Hybrid Search, "Ask Your Website" RAG, CSV Export)
 
 ---
 

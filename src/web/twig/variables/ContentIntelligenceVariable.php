@@ -52,7 +52,7 @@ class ContentIntelligenceVariable
     }
 
     /**
-     * Get semantically related Entry elements for frontend recommendations (Agency Edition).
+     * Get semantically related Entry elements for frontend recommendations (Plus Edition).
      *
      * @param int $entryId
      * @param int $limit
@@ -62,7 +62,7 @@ class ContentIntelligenceVariable
     public function getRelatedEntries(int $entryId, int $limit = 4, ?int $siteId = null): array
     {
         $plugin = Plugin::getInstance();
-        if (!$plugin->hasAgency()) {
+        if (!$plugin->hasPlus()) {
             return [];
         }
 
@@ -83,12 +83,12 @@ class ContentIntelligenceVariable
     }
 
     /**
-     * Perform frontend Hybrid Search across site knowledge base (Agency Edition).
+     * Perform frontend Hybrid Search across site knowledge base (Plus Edition).
      */
     public function search(string $query, int $limit = 5, ?int $siteId = null): array
     {
         $plugin = Plugin::getInstance();
-        if (!$plugin->hasAgency()) {
+        if (!$plugin->hasPlus()) {
             return [];
         }
 
@@ -105,7 +105,7 @@ class ContentIntelligenceVariable
         $plugin = Plugin::getInstance();
 
         $auditStats = $plugin->audit->getAuditStats($siteId);
-        $vectorStats = $plugin->hasAgency() ? $plugin->vector->getIndexStats($siteId) : [];
+        $vectorStats = $plugin->hasPlus() ? $plugin->vector->getIndexStats($siteId) : [];
 
         return [
             'audit' => $auditStats,

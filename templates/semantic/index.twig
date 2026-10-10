@@ -4,7 +4,7 @@
 {% set selectedSubnavItem = 'semantic' %}
 
 {% block pageActions %}
-    {% if hasAgency %}
+    {% if hasPlus ?? hasAgency %}
         <div style="display: flex; gap: 0.5rem; align-items: center;">
             <form method="post" action="{{ cpUrl('content-intelligence/semantic/prune') }}" style="display: inline-block;">
                 {{ csrfInput() }}
@@ -30,15 +30,15 @@
 {% endblock %}
 
 {% block ciContent %}
-    {% if not hasAgency %}
+    {% if not (hasPlus ?? hasAgency) %}
         <div class="ci-upgrade-banner">
-            <h3>{{ "Upgrade to Agency for Semantic Knowledge Base & Vector Search"|t('content-intelligence') }}</h3>
+            <h3>{{ "Upgrade to Plus for Semantic Knowledge Base & Vector Search"|t('content-intelligence') }}</h3>
             <p>
                 {{ "Semantic Search transforms your Craft CMS content into high-dimensional vector embeddings with heading-aware intelligent chunking and hash-based incremental indexing. Unlocks deep content similarity, related content discovery, and AI retrieval (RAG)."|t('content-intelligence') }}
             </p>
             <p style="margin-top: 1rem;">
                 <a href="https://plugins.craftcms.com" target="_blank" rel="noopener" class="btn submit">
-                    {{ "Upgrade to Agency Edition"|t('content-intelligence') }}
+                    {{ "Upgrade to Plus Edition"|t('content-intelligence') }}
                 </a>
             </p>
         </div>
@@ -91,12 +91,12 @@
     <div class="ci-panel" style="margin-bottom: 2rem;">
         <div class="ci-panel-header">
             <h2>{{ "Vector Storage Engine & Pipeline"|t('content-intelligence') }}</h2>
-            <span class="ci-edition-badge ci-badge-agency">{{ "Agency Architecture"|t('content-intelligence') }}</span>
+            <span class="ci-edition-badge ci-badge-plus">{{ "Plus Architecture"|t('content-intelligence') }}</span>
         </div>
         <div class="ci-panel-body" style="display: flex; gap: 2rem; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 300px;">
                 <p style="margin-top: 0; color: #4b5563; line-height: 1.5;">
-                    {{ "The Agency indexing engine breaks your Craft entries into semantically coherent paragraphs under contextual heading hierarchies. Every chunk calculates a SHA-256 fingerprint, guaranteeing 0 API cost and instant re-indexing for unchanged content."|t('content-intelligence') }}
+                    {{ "The Plus indexing engine breaks your Craft entries into semantically coherent paragraphs under contextual heading hierarchies. Every chunk calculates a SHA-256 fingerprint, guaranteeing 0 API cost and instant re-indexing for unchanged content."|t('content-intelligence') }}
                 </p>
                 <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
                     <a href="{{ cpUrl('content-intelligence/settings') }}" class="btn">
@@ -117,7 +117,7 @@
                     </tr>
                     <tr>
                         <td><strong>{{ "Collection Name"|t('content-intelligence') }}</strong></td>
-                        <td><code>{{ vectorHealth.collection ?: 'craft_content_agency' }}</code></td>
+                        <td><code>{{ vectorHealth.collection ?: 'content_intelligence' }}</code></td>
                     </tr>
                     <tr>
                         <td><strong>{{ "Last Site Index"|t('content-intelligence') }}</strong></td>
@@ -132,7 +132,7 @@
     <div class="ci-panel" style="margin-bottom: 2rem;">
         <div class="ci-panel-header">
             <h2>{{ "Interactive Hybrid Search Tester"|t('content-intelligence') }}</h2>
-            <span class="ci-edition-badge ci-badge-agency">{{ "Vector & Lexical Fusion"|t('content-intelligence') }}</span>
+            <span class="ci-edition-badge ci-badge-plus">{{ "Vector & Lexical Fusion"|t('content-intelligence') }}</span>
         </div>
         <div class="ci-panel-body">
             <p style="color: #64748b; font-size: 0.95rem; margin-top: 0; margin-bottom: 1rem;">
@@ -248,11 +248,11 @@
     </div>
 
     {% js %}
-        var hasAgency = {{ hasAgency ? 'true' : 'false' }};
+        var hasPlus = {{ (hasPlus ?? hasAgency) ? 'true' : 'false' }};
 
         function executeHybridSearch() {
-            if (!hasAgency) {
-                Craft.cp.displayNotice('{{ "Semantic Search & Embeddings require Content Intelligence Agency edition. Please upgrade your license to unlock."|t("content-intelligence")|e("js") }}');
+            if (!hasPlus) {
+                Craft.cp.displayNotice('{{ "Semantic Search & Embeddings require Content Intelligence Plus edition. Please upgrade your license to unlock."|t("content-intelligence")|e("js") }}');
                 return;
             }
 

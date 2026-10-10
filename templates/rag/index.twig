@@ -15,15 +15,15 @@
 {% endblock %}
 
 {% block ciContent %}
-    {% if not hasAgency %}
+    {% if not (hasPlus ?? hasAgency) %}
         <div class="ci-upgrade-banner">
-            <h3>{{ "Upgrade to Agency for Grounded RAG Intelligence"|t('content-intelligence') }}</h3>
+            <h3>{{ "Upgrade to Plus for Grounded RAG Intelligence"|t('content-intelligence') }}</h3>
             <p>
                 {{ "Ask Your Website enables conversational inquiries strictly grounded in your indexed website content with transparent source citations, zero hallucination guardrails, and real-time retrieval."|t('content-intelligence') }}
             </p>
             <p style="margin-top: 1rem;">
                 <a href="https://plugins.craftcms.com" target="_blank" rel="noopener" class="btn submit">
-                    {{ "Upgrade to Agency Edition"|t('content-intelligence') }}
+                    {{ "Upgrade to Plus Edition"|t('content-intelligence') }}
                 </a>
             </p>
         </div>
@@ -41,7 +41,7 @@
             </div>
         </div>
         <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <span class="ci-edition-badge ci-badge-agency">{{ "Grounded RAG"|t('content-intelligence') }}</span>
+            <span class="ci-edition-badge ci-badge-plus">{{ "Grounded RAG"|t('content-intelligence') }}</span>
             {% if not aiConfigured %}
                 <span class="ci-severity-badge ci-severity-warning" title="{{ 'Hybrid retrieval active, AI key optional'|t('content-intelligence') }}">
                     {{ "Local Retrieval Mode"|t('content-intelligence') }}
@@ -175,11 +175,11 @@
             return div.innerHTML;
         }
 
-        var hasAgency = {{ hasAgency ? 'true' : 'false' }};
+        var hasPlus = {{ (hasPlus ?? hasAgency) ? 'true' : 'false' }};
 
         function sendQuestion() {
-            if (!hasAgency) {
-                Craft.cp.displayNotice('{{ "Ask Your Website RAG requires Content Intelligence Agency edition. Please upgrade your license to unlock."|t("content-intelligence")|e("js") }}');
+            if (!hasPlus) {
+                Craft.cp.displayNotice('{{ "Ask Your Website RAG requires Content Intelligence Plus edition. Please upgrade your license to unlock."|t("content-intelligence")|e("js") }}');
                 return;
             }
 

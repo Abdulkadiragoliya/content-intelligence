@@ -36,11 +36,11 @@ class AiController extends Controller
             return true;
         }
 
-        // All AI generation and execution endpoints strictly require Pro or Agency edition
+        // All AI generation and execution endpoints strictly require Pro or Plus edition
         if (!Plugin::getInstance()->hasPro()) {
             $this->response->data = [
                 'success' => false,
-                'message' => Craft::t('content-intelligence', 'AI Assistant features require Content Intelligence Pro or Agency edition. Please upgrade your license to unlock.'),
+                'message' => Craft::t('content-intelligence', 'AI Assistant features require Content Intelligence Pro or Plus edition. Please upgrade your license to unlock.'),
                 'upgradeRequired' => true,
             ];
             $this->response->format = Response::FORMAT_JSON;

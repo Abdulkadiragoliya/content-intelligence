@@ -46,8 +46,8 @@ class HealthController extends Controller
             $this->stdout(" - API Connection: Skipped (API Key not set)\n", Console::FG_YELLOW);
         }
 
-        // 3. Vector DB Diagnostics (Agency)
-        if ($plugin->hasAgency()) {
+        // 3. Vector DB Diagnostics (Plus)
+        if ($plugin->hasPlus()) {
             $this->stdout("\n[Vector Database & Knowledge Base]\n", Console::BOLD);
             $health = $plugin->vector->getHealthStatus();
             $this->stdout(" - Storage Engine: {$health['store']}\n");

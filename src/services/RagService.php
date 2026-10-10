@@ -11,7 +11,7 @@ use abdulkadiragoliya\contentintelligence\records\AuditResultRecord;
 
 /**
  * Service orchestrating RAG (Retrieval-Augmented Generation) & Content Recommendations
- * for Content Intelligence Agency Edition.
+ * for Content Intelligence Plus Edition.
  */
 class RagService extends Component
 {
@@ -21,7 +21,7 @@ class RagService extends Component
     public function isAvailable(): bool
     {
         $plugin = Plugin::getInstance();
-        return $plugin->hasAgency() && $plugin->ai->isConfigured();
+        return $plugin->hasPlus() && $plugin->ai->isConfigured();
     }
 
     /**
@@ -34,7 +34,7 @@ class RagService extends Component
      */
     public function askWebsite(string $question, int $siteId, array $options = []): array
     {
-        $this->requireAgencyEdition();
+        $this->requirePlusEdition();
 
         $cleanQuestion = trim($question);
         if (empty($cleanQuestion)) {
@@ -223,7 +223,7 @@ class RagService extends Component
      */
     public function getRecommendations(int $entryId, int $siteId, int $limit = 4): array
     {
-        $this->requireAgencyEdition();
+        $this->requirePlusEdition();
 
         $entry = Entry::find()->id($entryId)->siteId($siteId)->status(null)->one();
         if (!$entry) {
@@ -270,12 +270,20 @@ class RagService extends Component
     }
 
     /**
-     * Enforce Agency edition requirement.
+     * Enforce Plus edition requirement.
+     */
+    protected function requirePlusEdition(): void
+    {
+        if (!Plugin::getInstance()->hasPlus()) {
+            throw new \RuntimeException('Ask Your Website RAG requires Content Intelligence Plus edition.');
+        }
+    }
+
+    /**
+     * Compatibility alias for requirePlusEdition.
      */
     protected function requireAgencyEdition(): void
     {
-        if (!Plugin::getInstance()->hasAgency()) {
-            throw new \RuntimeException('Ask Your Website RAG requires Content Intelligence Agency edition.');
-        }
+        $this->requirePlusEdition();
     }
 }

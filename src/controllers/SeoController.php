@@ -98,7 +98,7 @@ class SeoController extends Controller
         if (!Plugin::getInstance()->hasPro()) {
             return $this->asJson([
                 'success' => false,
-                'message' => Craft::t('content-intelligence', 'AI SEO Analysis requires Content Intelligence Pro or Agency edition. Please upgrade your license to unlock.'),
+                'message' => Craft::t('content-intelligence', 'AI SEO Analysis requires Content Intelligence Pro or Plus edition. Please upgrade your license to unlock.'),
                 'upgradeRequired' => true,
             ]);
         }

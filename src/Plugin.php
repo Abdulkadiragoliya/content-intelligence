@@ -13,6 +13,7 @@ use craft\events\RegisterCpNavItemsEvent;
 use craft\events\RegisterTemplateRootsEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\events\RegisterUserPermissionsEvent;
+use craft\enums\LicenseKeyStatus;
 use craft\helpers\App;
 use craft\helpers\UrlHelper;
 use craft\services\UserPermissions;
@@ -47,7 +48,8 @@ class Plugin extends BasePlugin
 {
     public const EDITION_LITE = 'lite';
     public const EDITION_PRO = 'pro';
-    public const EDITION_AGENCY = 'agency';
+    public const EDITION_PLUS = 'plus';
+    public const EDITION_AGENCY = 'plus'; // Compatibility alias for Plus edition
 
     public string $schemaVersion = '1.0.0';
     public bool $hasCpSection = true;
@@ -61,7 +63,7 @@ class Plugin extends BasePlugin
         return [
             self::EDITION_LITE,
             self::EDITION_PRO,
-            self::EDITION_AGENCY,
+            self::EDITION_PLUS,
         ];
     }
 
@@ -87,29 +89,112 @@ class Plugin extends BasePlugin
     }
 
     /**
+     * Determine if the current environment is a local or development environment.
+     * Only local development and testing environments are allowed to override
+     * editions via .env or unverified project config settings.
+     */
+    public function isDevOrLocal(): bool
+    {
+        // 1. Explicit devMode
+        if (Craft::$app->getConfig()->getGeneral()->devMode) {
+            return true;
+        }
+
+        // 2. CRAFT_ENVIRONMENT variable check
+        $craftEnv = strtolower((string)App::env('CRAFT_ENVIRONMENT'));
+        if (in_array($craftEnv, ['dev', 'local', 'test', 'testing', 'staging'], true)) {
+            return true;
+        }
+
+        // 3. Console execution (CLI commands, queue runner, unit tests)
+        if (Craft::$app->getRequest()->getIsConsoleRequest()) {
+            return true;
+        }
+
+        // 4. Known local development hosts and domain patterns
+        try {
+            $host = strtolower(Craft::$app->getRequest()->getHostName() ?: '');
+            if (
+                $host === 'localhost' ||
+                $host === '127.0.0.1' ||
+                $host === '::1' ||
+                str_starts_with($host, 'local.') ||
+                str_starts_with($host, 'dev.') ||
+                str_ends_with($host, '.local') ||
+                str_ends_with($host, '.test') ||
+                str_ends_with($host, '.localhost') ||
+                str_ends_with($host, '.ddev.site') ||
+                str_ends_with($host, '.lndo.site') ||
+                str_ends_with($host, '.nitro') ||
+                str_ends_with($host, '.nip.io')
+            ) {
+                return true;
+            }
+        } catch (\Throwable) {
+            // Request may not be available in all contexts
+        }
+
+        return false;
+    }
+
+    /**
      * Get the active plugin edition.
-     * Enforces the Craft Plugin Store license in production while allowing
-     * local developers to test different editions via devMode or .env.
+     * Allows developers to test Lite, Pro, and Plus locally via .env or project config,
+     * while strictly enforcing Craft Plugin Store licensing on live production sites
+     * so that end users cannot bypass licensing simply by editing .env.
      */
     public function getActiveEdition(): string
     {
-        $isDev = Craft::$app->getConfig()->getGeneral()->devMode
-            || in_array(App::env('CRAFT_ENVIRONMENT'), ['dev', 'local', 'test', 'testing', 'staging'], true);
+        $isDev = $this->isDevOrLocal();
 
-        // Allow .env override during local development & testing
+        // 1. Allow .env override ONLY during local development and testing
         if ($isDev) {
             $override = App::env('CONTENT_INTELLIGENCE_EDITION');
-            if ($override && in_array(strtolower($override), [self::EDITION_LITE, self::EDITION_PRO, self::EDITION_AGENCY], true)) {
-                return strtolower($override);
+            if ($override) {
+                $override = strtolower(trim((string)$override));
+                if ($override === 'agency') {
+                    $override = self::EDITION_PLUS;
+                }
+                if (in_array($override, [self::EDITION_LITE, self::EDITION_PRO, self::EDITION_PLUS], true)) {
+                    return $override;
+                }
             }
-            if ($this->edition && $this->edition !== self::EDITION_LITE) {
-                return $this->edition;
+
+            // In local development, also respect whatever edition is set in project config
+            $edition = strtolower($this->edition ?: self::EDITION_LITE);
+            if ($edition === 'agency') {
+                $edition = self::EDITION_PLUS;
             }
-            return self::EDITION_PRO;
+            return in_array($edition, [self::EDITION_LITE, self::EDITION_PRO, self::EDITION_PLUS], true) ? $edition : self::EDITION_LITE;
         }
 
-        // On production, strictly enforce the purchased Craft Plugin Store license
-        return $this->edition ?: self::EDITION_LITE;
+        // =========================================================================
+        // STRICT PRODUCTION ENFORCEMENT
+        // The .env override is completely IGNORED on live production domains.
+        // Only legitimate editions purchased through Craft Console / Plugin Store are honored.
+        // =========================================================================
+        $edition = strtolower($this->edition ?: self::EDITION_LITE);
+        if ($edition === 'agency') {
+            $edition = self::EDITION_PLUS;
+        }
+
+        // Free Lite edition requires no commercial license key
+        if ($edition === self::EDITION_LITE) {
+            return self::EDITION_LITE;
+        }
+
+        // For Pro and Plus on production, verify that the license key is valid
+        try {
+            $licenseStatus = Craft::$app->getPlugins()->getPluginLicenseKeyStatus($this->handle);
+            if (in_array($licenseStatus, [LicenseKeyStatus::Invalid, LicenseKeyStatus::Mismatched], true)) {
+                Craft::warning("Content Intelligence commercial edition [{$edition}] requires a valid license key on production. Reverting to Lite.", __METHOD__);
+                return self::EDITION_LITE;
+            }
+        } catch (\Throwable $e) {
+            Craft::error("Content Intelligence license check error: {$e->getMessage()}", __METHOD__);
+        }
+
+        return in_array($edition, [self::EDITION_PRO, self::EDITION_PLUS], true) ? $edition : self::EDITION_LITE;
     }
 
     /**
@@ -117,15 +202,23 @@ class Plugin extends BasePlugin
      */
     public function hasPro(): bool
     {
-        return in_array($this->getActiveEdition(), [self::EDITION_PRO, self::EDITION_AGENCY], true);
+        return in_array($this->getActiveEdition(), [self::EDITION_PRO, self::EDITION_PLUS], true);
     }
 
     /**
-     * Check if Agency edition features are active.
+     * Check if Plus edition features are active.
+     */
+    public function hasPlus(): bool
+    {
+        return $this->getActiveEdition() === self::EDITION_PLUS;
+    }
+
+    /**
+     * Compatibility alias for hasPlus().
      */
     public function hasAgency(): bool
     {
-        return $this->getActiveEdition() === self::EDITION_AGENCY;
+        return $this->hasPlus();
     }
 
     /**
@@ -196,13 +289,13 @@ class Plugin extends BasePlugin
                             'label' => Craft::t('content-intelligence', 'Run Content & SEO Audits'),
                         ],
                         'contentIntelligence:useAi' => [
-                            'label' => Craft::t('content-intelligence', 'Use AI Assistant (Pro/Agency)'),
+                            'label' => Craft::t('content-intelligence', 'Use AI Assistant (Pro/Plus)'),
                         ],
                         'contentIntelligence:manageKnowledgeBase' => [
-                            'label' => Craft::t('content-intelligence', 'Manage Semantic Index & Knowledge Base (Agency)'),
+                            'label' => Craft::t('content-intelligence', 'Manage Semantic Index & Knowledge Base (Plus)'),
                         ],
                         'contentIntelligence:askWebsite' => [
-                            'label' => Craft::t('content-intelligence', 'Use Ask Your Website RAG (Agency)'),
+                            'label' => Craft::t('content-intelligence', 'Use Ask Your Website RAG (Plus)'),
                         ],
                         'contentIntelligence:manageSettings' => [
                             'label' => Craft::t('content-intelligence', 'Manage Plugin Settings'),
@@ -282,8 +375,8 @@ class Plugin extends BasePlugin
                     }
                 }
 
-                // Incremental auto-index on entry save (Agency Edition)
-                if ($this->hasAgency()) {
+                // Incremental auto-index on entry save (Plus Edition)
+                if ($this->hasPlus()) {
                     try {
                         $this->vector->indexEntry($entry, $this->ai->isConfigured());
                     } catch (\Throwable $e) {
@@ -381,20 +474,20 @@ class Plugin extends BasePlugin
             ],
         ];
 
-        // Pro & Agency feature navigation
+        // Pro & Plus feature navigation
         $subnav['ai'] = [
             'label' => Craft::t('content-intelligence', 'AI Assistant') . ($this->hasPro() ? '' : ' (Pro)'),
             'url' => 'content-intelligence/ai',
         ];
 
-        // Agency feature navigation
+        // Plus feature navigation
         $subnav['semantic'] = [
-            'label' => Craft::t('content-intelligence', 'Semantic Search') . ($this->hasAgency() ? '' : ' (Agency)'),
+            'label' => Craft::t('content-intelligence', 'Semantic Search') . ($this->hasPlus() ? '' : ' (Plus)'),
             'url' => 'content-intelligence/semantic',
         ];
 
         $subnav['rag'] = [
-            'label' => Craft::t('content-intelligence', 'Ask Your Website') . ($this->hasAgency() ? '' : ' (Agency)'),
+            'label' => Craft::t('content-intelligence', 'Ask Your Website') . ($this->hasPlus() ? '' : ' (Plus)'),
             'url' => 'content-intelligence/rag',
         ];
 

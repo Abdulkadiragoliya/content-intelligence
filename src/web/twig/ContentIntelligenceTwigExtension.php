@@ -31,7 +31,8 @@ class ContentIntelligenceTwigExtension extends AbstractExtension
         return [
             new TwigFunction('ciEdition', fn() => Plugin::getInstance()->getActiveEdition()),
             new TwigFunction('ciHasPro', fn() => Plugin::getInstance()->hasPro()),
-            new TwigFunction('ciHasAgency', fn() => Plugin::getInstance()->hasAgency()),
+            new TwigFunction('ciHasPlus', fn() => Plugin::getInstance()->hasPlus()),
+            new TwigFunction('ciHasAgency', fn() => Plugin::getInstance()->hasPlus()),
         ];
     }
 

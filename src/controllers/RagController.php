@@ -8,7 +8,7 @@ use yii\web\Response;
 use abdulkadiragoliya\contentintelligence\Plugin;
 
 /**
- * Controller for Ask Your Website / RAG & Recommendations (Agency Edition).
+ * Controller for Ask Your Website / RAG & Recommendations (Plus Edition).
  */
 class RagController extends Controller
 {
@@ -26,10 +26,10 @@ class RagController extends Controller
             return true;
         }
 
-        if (!Plugin::getInstance()->hasAgency()) {
+        if (!Plugin::getInstance()->hasPlus()) {
             $this->response->data = [
                 'success' => false,
-                'message' => Craft::t('content-intelligence', 'Ask Your Website RAG requires Content Intelligence Agency edition. Please upgrade your license to unlock.'),
+                'message' => Craft::t('content-intelligence', 'Ask Your Website RAG requires Content Intelligence Plus edition. Please upgrade your license to unlock.'),
                 'upgradeRequired' => true,
             ];
             $this->response->format = \yii\web\Response::FORMAT_JSON;
@@ -51,7 +51,8 @@ class RagController extends Controller
 
         return $this->renderTemplate('content-intelligence/rag/index', [
             'edition' => $plugin->getActiveEdition(),
-            'hasAgency' => $plugin->hasAgency(),
+            'hasPlus' => $plugin->hasPlus(),
+            'hasAgency' => $plugin->hasPlus(),
             'currentSite' => $site,
             'aiConfigured' => $plugin->ai->isConfigured(),
             'vectorHealth' => $plugin->vector->getHealthStatus(),
@@ -67,10 +68,10 @@ class RagController extends Controller
         $this->requirePermission('contentIntelligence:askWebsite');
 
         $plugin = Plugin::getInstance();
-        if (!$plugin->hasAgency()) {
+        if (!$plugin->hasPlus()) {
             return $this->asJson([
                 'success' => false,
-                'message' => Craft::t('content-intelligence', 'Ask Your Website RAG requires Agency edition.'),
+                'message' => Craft::t('content-intelligence', 'Ask Your Website RAG requires Plus edition.'),
             ]);
         }
 
@@ -96,10 +97,10 @@ class RagController extends Controller
         $this->requirePermission('contentIntelligence:askWebsite');
 
         $plugin = Plugin::getInstance();
-        if (!$plugin->hasAgency()) {
+        if (!$plugin->hasPlus()) {
             return $this->asJson([
                 'success' => false,
-                'message' => Craft::t('content-intelligence', 'Agency edition required.'),
+                'message' => Craft::t('content-intelligence', 'Plus edition required.'),
             ]);
         }
 

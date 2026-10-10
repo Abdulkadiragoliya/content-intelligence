@@ -21,13 +21,13 @@ class Settings extends Model
     public int $minDescriptionLength = 70;
     public int $maxDescriptionLength = 160;
 
-    // AI Settings (Pro & Agency)
+    // AI Settings (Pro & Plus)
     public string $aiProvider = 'openai';
     public string $openaiApiKey = '';
     public string $openaiModel = 'gpt-4o-mini';
     public float $temperature = 0.2;
 
-    // Vector / Semantic Settings (Agency)
+    // Vector / Semantic Settings (Plus)
     public string $vectorStore = 'qdrant';
     public string $qdrantUrl = 'http://localhost:6333';
     public string $qdrantApiKey = '';
@@ -36,7 +36,7 @@ class Settings extends Model
     public int $chunkSize = 500;
     public int $chunkOverlap = 50;
 
-    // Multi-site Agency Overrides
+    // Multi-site Plus Overrides
     public array $siteSettings = [];
 
     /**

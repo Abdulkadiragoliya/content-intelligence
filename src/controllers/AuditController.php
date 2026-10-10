@@ -124,7 +124,7 @@ class AuditController extends Controller
     }
 
     /**
-     * Agency Reporting: Export complete Audit Report as CSV.
+     * Plus Reporting: Export complete Audit Report as CSV.
      */
     public function actionExport(): Response
     {

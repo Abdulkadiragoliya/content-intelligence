@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-10-10
+
+### Changed
+- Standardized commercial edition names to **Lite**, **Pro**, and **Plus** in alignment with official Craft CMS Plugin Store guidelines.
+- Added `EDITION_PLUS` and `hasPlus()` methods with full backwards-compatibility aliases for `EDITION_AGENCY` and `hasAgency()`.
+- Updated Control Panel templates, navigation labels, and upgrade banners to reference the Plus edition.
+- Hardened edition security: `.env` edition overrides are strictly confined to local development environments (`localhost`, `local.*`, `*.test`, `devMode`), preventing production license bypass. Production environments strictly enforce official Craft Plugin Store licenses.
+
 ## [1.0.1] - 2026-10-09
 
 ### Fixed

@@ -10,7 +10,7 @@ use abdulkadiragoliya\contentintelligence\services\ai\OpenAiProvider;
 use abdulkadiragoliya\contentintelligence\services\ai\PromptTemplates;
 
 /**
- * Service orchestrating AI operations, provider abstraction, and health checks for Pro & Agency.
+ * Service orchestrating AI operations, provider abstraction, and health checks for Pro & Plus.
  */
 class AiService extends Component
 {
@@ -259,12 +259,12 @@ class AiService extends Component
     }
 
     /**
-     * Ensures active edition is Pro or Agency before executing AI features.
+     * Ensures active edition is Pro or Plus before executing AI features.
      */
     protected function requireProEdition(): void
     {
         if (!Plugin::getInstance()->hasPro()) {
-            throw new \RuntimeException('AI capabilities require Content Intelligence Pro or Agency edition.');
+            throw new \RuntimeException('AI capabilities require Content Intelligence Pro or Plus edition.');
         }
         if (!$this->isConfigured()) {
             throw new \RuntimeException('OpenAI API key is not configured. Please set your API key in Settings.');
