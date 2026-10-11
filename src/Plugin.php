@@ -248,6 +248,39 @@ class Plugin extends BasePlugin
     }
 
     /**
+     * Resolves the active site for Content Intelligence, inspecting query param and session.
+     */
+    public function getActiveSite(): \craft\models\Site
+    {
+        $siteHandle = Craft::$app->getRequest()->getParam('site') ?? Craft::$app->getRequest()->getQueryParam('site');
+        if ($siteHandle) {
+            $site = Craft::$app->getSites()->getSiteByHandle($siteHandle);
+            if ($site) {
+                if (!Craft::$app->getRequest()->getIsConsoleRequest()) {
+                    try {
+                        Craft::$app->getSession()->set('ci_selected_site', $site->handle);
+                    } catch (\Throwable) {}
+                }
+                return $site;
+            }
+        }
+
+        if (!Craft::$app->getRequest()->getIsConsoleRequest()) {
+            try {
+                $sessionHandle = Craft::$app->getSession()->get('ci_selected_site');
+                if ($sessionHandle) {
+                    $site = Craft::$app->getSites()->getSiteByHandle($sessionHandle);
+                    if ($site) {
+                        return $site;
+                    }
+                }
+            } catch (\Throwable) {}
+        }
+
+        return Craft::$app->getSites()->getCurrentSite();
+    }
+
+    /**
      * Registers the plugin components/services.
      */
     protected function registerComponents(): void
@@ -500,23 +533,18 @@ class Plugin extends BasePlugin
                 'label' => Craft::t('content-intelligence', 'SEO Audit'),
                 'url' => 'content-intelligence/seo',
             ],
-        ];
-
-        // Plus feature navigation (AI Assistant in Plus and Pro)
-        $subnav['ai'] = [
-            'label' => Craft::t('content-intelligence', 'AI Assistant') . ($this->hasPlus() ? '' : ' (Plus)'),
-            'url' => 'content-intelligence/ai',
-        ];
-
-        // Pro feature navigation (Semantic & RAG in Pro)
-        $subnav['semantic'] = [
-            'label' => Craft::t('content-intelligence', 'Semantic Search') . ($this->hasPro() ? '' : ' (Pro)'),
-            'url' => 'content-intelligence/semantic',
-        ];
-
-        $subnav['rag'] = [
-            'label' => Craft::t('content-intelligence', 'Ask Your Website') . ($this->hasPro() ? '' : ' (Pro)'),
-            'url' => 'content-intelligence/rag',
+            'ai' => [
+                'label' => Craft::t('content-intelligence', 'AI Assistant') . ($this->hasPlus() ? '' : ' (Plus)'),
+                'url' => 'content-intelligence/ai',
+            ],
+            'semantic' => [
+                'label' => Craft::t('content-intelligence', 'Semantic Search') . ($this->hasPro() ? '' : ' (Pro)'),
+                'url' => 'content-intelligence/semantic',
+            ],
+            'rag' => [
+                'label' => Craft::t('content-intelligence', 'Ask Your Website') . ($this->hasPro() ? '' : ' (Pro)'),
+                'url' => 'content-intelligence/rag',
+            ],
         ];
 
         if ($user->checkPermission('contentIntelligence:manageSettings')) {

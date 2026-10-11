@@ -59,10 +59,12 @@ class AiController extends Controller
 
         $plugin = Plugin::getInstance();
         $request = Craft::$app->getRequest();
+        $site = $plugin->getActiveSite();
         $selectedEntryId = (int)$request->getQueryParam('entryId', 0);
 
-        // Fetch section entries (exclude internal matrix blocks)
+        // Fetch section entries scoped to current site
         $entries = Entry::find()
+            ->siteId($site->id)
             ->section('*')
             ->orderBy('title asc')
             ->all();
@@ -70,7 +72,7 @@ class AiController extends Controller
         $selectedEntry = null;
         $entryContent = null;
         if ($selectedEntryId) {
-            $selectedEntry = Entry::find()->id($selectedEntryId)->one();
+            $selectedEntry = Entry::find()->id($selectedEntryId)->siteId($site->id)->one();
             if ($selectedEntry) {
                 $entryContent = $plugin->ai->extractEntryContent($selectedEntry);
             }
@@ -87,6 +89,7 @@ class AiController extends Controller
             'entries' => $entries,
             'selectedEntry' => $selectedEntry,
             'entryContent' => $entryContent,
+            'currentSite' => $site,
         ]);
     }
 

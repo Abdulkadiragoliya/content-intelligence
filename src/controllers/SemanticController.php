@@ -50,7 +50,7 @@ class SemanticController extends Controller
         $this->requirePermission('contentIntelligence:manageKnowledgeBase');
 
         $plugin = Plugin::getInstance();
-        $site = Craft::$app->getSites()->getCurrentSite();
+        $site = $plugin->getActiveSite();
         $hasPro = $plugin->hasPro();
 
         $stats = $hasPro ? $plugin->vector->getIndexStats($site->id) : [
@@ -95,15 +95,51 @@ class SemanticController extends Controller
             return $this->redirectToPostedUrl(null, 'content-intelligence/semantic');
         }
 
-        $site = Craft::$app->getSites()->getCurrentSite();
+        $siteId = (int)$this->request->getBodyParam('siteId');
+        $site = $siteId ? Craft::$app->getSites()->getSiteById($siteId) : $plugin->getActiveSite();
+        $site = $site ?? $plugin->getActiveSite();
 
-        Craft::$app->getQueue()->push(new IndexContentJob([
-            'siteId' => $site->id,
-            'generateVectors' => $plugin->ai->isConfigured(),
-        ]));
+        $entries = Entry::find()
+            ->siteId($site->id)
+            ->section('*')
+            ->status(null)
+            ->all();
 
-        $this->setSuccessFlash(Craft::t('content-intelligence', 'Semantic indexing queued for all entries.'));
-        return $this->redirectToPostedUrl(null, 'content-intelligence/semantic');
+        $count = count($entries);
+        $indexed = 0;
+
+        // Process directly up to 50 entries so status updates immediately without waiting for queue worker
+        if ($count > 0 && $count <= 50) {
+            foreach ($entries as $entry) {
+                try {
+                    $plugin->vector->indexEntry($entry, $plugin->ai->isConfigured());
+                    $indexed++;
+                } catch (\Throwable $e) {
+                    Craft::error("Direct semantic indexing failed on entry #{$entry->id}: {$e->getMessage()}", __METHOD__);
+                }
+            }
+
+            try {
+                $this->setSuccessFlash(Craft::t('content-intelligence', 'Successfully indexed {count} entries for {site}.', [
+                    'count' => $indexed,
+                    'site' => $site->name,
+                ]));
+            } catch (\Throwable) {}
+        } else {
+            Craft::$app->getQueue()->push(new IndexContentJob([
+                'siteId' => $site->id,
+                'generateVectors' => $plugin->ai->isConfigured(),
+            ]));
+
+            try {
+                $this->setSuccessFlash(Craft::t('content-intelligence', 'Semantic indexing queued for all {count} entries on {site}.', [
+                    'count' => $count,
+                    'site' => $site->name,
+                ]));
+            } catch (\Throwable) {}
+        }
+
+        return $this->redirectToPostedUrl(null, 'content-intelligence/semantic?site=' . $site->handle);
     }
 
     /**
@@ -117,13 +153,15 @@ class SemanticController extends Controller
 
         $plugin = Plugin::getInstance();
         if (!$plugin->hasPro()) {
-            $this->setFailFlash(Craft::t('content-intelligence', 'Semantic indexing requires Pro edition.'));
+            try {
+                $this->setFailFlash(Craft::t('content-intelligence', 'Semantic indexing requires Pro edition.'));
+            } catch (\Throwable) {}
             return $this->redirectToPostedUrl(null, 'content-intelligence/semantic');
         }
 
         $siteHandle = (string)$this->request->getParam('site');
         $site = $siteHandle ? Craft::$app->getSites()->getSiteByHandle($siteHandle) : null;
-        $site = $site ?? Craft::$app->getSites()->getCurrentSite();
+        $site = $site ?? $plugin->getActiveSite();
 
         $entry = Entry::find()->id($entryId)->siteId($site->id)->status(null)->one();
 
@@ -133,14 +171,16 @@ class SemanticController extends Controller
 
         $res = $plugin->vector->indexEntry($entry, $plugin->ai->isConfigured());
 
-        $this->setSuccessFlash(Craft::t('content-intelligence', 'Indexed {count} chunks for "{title}" ({created} new, {unchanged} unchanged).', [
-            'count' => $res['totalChunks'],
-            'title' => $entry->title,
-            'created' => $res['created'],
-            'unchanged' => $res['unchanged'],
-        ]));
+        try {
+            $this->setSuccessFlash(Craft::t('content-intelligence', 'Indexed {count} chunks for "{title}" ({created} new, {unchanged} unchanged).', [
+                'count' => $res['totalChunks'],
+                'title' => $entry->title,
+                'created' => $res['created'],
+                'unchanged' => $res['unchanged'],
+            ]));
+        } catch (\Throwable) {}
 
-        return $this->redirectToPostedUrl($entry, 'content-intelligence/semantic');
+        return $this->redirectToPostedUrl($entry, 'content-intelligence/semantic?site=' . $site->handle);
     }
 
     /**
@@ -179,7 +219,7 @@ class SemanticController extends Controller
         $plugin = Plugin::getInstance();
         $siteHandle = (string)$this->request->getParam('site');
         $site = $siteHandle ? Craft::$app->getSites()->getSiteByHandle($siteHandle) : null;
-        $site = $site ?? Craft::$app->getSites()->getCurrentSite();
+        $site = $site ?? $plugin->getActiveSite();
 
         $entry = Entry::find()->id($entryId)->siteId($site->id)->status(null)->one();
         if (!$entry) {
@@ -214,7 +254,9 @@ class SemanticController extends Controller
 
         $query = (string)$this->request->getBodyParam('query', '');
         $limit = max(1, min(20, (int)$this->request->getBodyParam('limit', 5)));
-        $site = Craft::$app->getSites()->getCurrentSite();
+        $siteId = (int)$this->request->getBodyParam('siteId');
+        $site = $siteId ? Craft::$app->getSites()->getSiteById($siteId) : $plugin->getActiveSite();
+        $site = $site ?? $plugin->getActiveSite();
 
         if (empty(trim($query))) {
             return $this->asJson([

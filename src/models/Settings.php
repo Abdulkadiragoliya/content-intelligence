@@ -54,6 +54,34 @@ class Settings extends Model
     }
 
     /**
+     * Default configuration properties.
+     */
+    public static function getDefaultProperty(string $property): mixed
+    {
+        $defaults = [
+            'enableAutoAuditOnSave' => true,
+            'minContentWordCount' => 300,
+            'staleContentDays' => 180,
+            'minTitleLength' => 30,
+            'maxTitleLength' => 60,
+            'minDescriptionLength' => 70,
+            'maxDescriptionLength' => 160,
+            'aiProvider' => 'openai',
+            'openaiApiKey' => '',
+            'openaiModel' => 'gpt-4o-mini',
+            'temperature' => 0.2,
+            'vectorStore' => 'qdrant',
+            'qdrantUrl' => 'http://localhost:6333',
+            'qdrantApiKey' => '',
+            'qdrantCollection' => 'content_intelligence',
+            'embeddingModel' => 'text-embedding-3-small',
+            'chunkSize' => 500,
+            'chunkOverlap' => 50,
+        ];
+        return $defaults[$property] ?? null;
+    }
+
+    /**
      * Retrieve setting value with optional per-site override.
      */
     public function getForSite(string $property, ?int $siteId = null): mixed
@@ -61,6 +89,12 @@ class Settings extends Model
         if ($siteId !== null && isset($this->siteSettings[$siteId][$property])) {
             return $this->siteSettings[$siteId][$property];
         }
+
+        $default = static::getDefaultProperty($property);
+        if ($default !== null) {
+            return $default;
+        }
+
         return $this->$property ?? null;
     }
 

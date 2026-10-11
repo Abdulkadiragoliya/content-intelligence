@@ -7,7 +7,7 @@
     <form method="post" action="{{ cpUrl('content-intelligence/seo/run') }}" style="display: inline-block;">
         {{ csrfInput() }}
         {{ actionInput('content-intelligence/seo/run') }}
-        {{ redirectInput('content-intelligence/seo') }}
+        <input type="hidden" name="siteId" value="{{ currentSite.id }}">
         <button type="submit" class="btn submit">
             <span class="icon" data-icon="refresh"></span>
             {{ "Scan Site SEO"|t('content-intelligence') }}
@@ -122,7 +122,7 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a href="{{ cpUrl('content-intelligence/seo/' ~ entry.id) }}" class="btn small">
+                                    <a href="{{ cpUrl('content-intelligence/seo/' ~ entry.id, { site: currentSite.handle }) }}" class="btn small">
                                         {{ "Inspect SEO"|t('content-intelligence') }}
                                     </a>
                                 </td>

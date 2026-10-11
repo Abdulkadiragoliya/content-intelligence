@@ -3,16 +3,18 @@
 
 {% set title = "Content Intelligence Settings"|t('content-intelligence') %}
 {% set selectedSubnavItem = 'settings' %}
+{% set activeSite = currentSite ?? craft.app.sites.currentSite %}
 
 {% block ciContent %}
 <form method="post" accept-charset="UTF-8">
     {{ csrfInput() }}
     {{ actionInput('content-intelligence/settings/save') }}
-    {{ redirectInput('content-intelligence/settings') }}
+    <input type="hidden" name="siteId" value="{{ activeSite.id }}">
+    {{ redirectInput(cpUrl('content-intelligence/settings', { site: activeSite.handle })) }}
 
     <div class="ci-panel">
         <div class="ci-panel-header">
-            <h2>{{ "General Audit Configuration"|t('content-intelligence') }}</h2>
+            <h2>{{ "General Audit Configuration"|t('content-intelligence') }} <span style="font-size: 0.85rem; font-weight: normal; color: #64748b; margin-left: 0.5rem;">({{ activeSite.name }})</span></h2>
             <span class="ci-edition-badge ci-badge-lite">{{ "Lite / Plus / Pro"|t('content-intelligence') }}</span>
         </div>
         <div class="ci-panel-body">
@@ -21,7 +23,7 @@
                 instructions: "Automatically trigger an entry audit whenever content is saved."|t('content-intelligence'),
                 id: 'enableAutoAuditOnSave',
                 name: 'settings[enableAutoAuditOnSave]',
-                on: settings.enableAutoAuditOnSave
+                on: settings.getForSite('enableAutoAuditOnSave', activeSite.id)
             }) }}
 
             {{ forms.textField({
@@ -29,7 +31,7 @@
                 instructions: "Entries below this threshold are flagged as thin content."|t('content-intelligence'),
                 id: 'minContentWordCount',
                 name: 'settings[minContentWordCount]',
-                value: settings.minContentWordCount,
+                value: settings.getForSite('minContentWordCount', activeSite.id),
                 type: 'number'
             }) }}
 
@@ -38,7 +40,7 @@
                 instructions: "Entries not updated within this timeframe are flagged for freshness review."|t('content-intelligence'),
                 id: 'staleContentDays',
                 name: 'settings[staleContentDays]',
-                value: settings.staleContentDays,
+                value: settings.getForSite('staleContentDays', activeSite.id),
                 type: 'number'
             }) }}
         </div>
@@ -46,7 +48,7 @@
 
     <div class="ci-panel">
         <div class="ci-panel-header">
-            <h2>{{ "SEO Audit Thresholds"|t('content-intelligence') }}</h2>
+            <h2>{{ "SEO Audit Thresholds"|t('content-intelligence') }} <span style="font-size: 0.85rem; font-weight: normal; color: #64748b; margin-left: 0.5rem;">({{ activeSite.name }})</span></h2>
             <span class="ci-edition-badge ci-badge-lite">{{ "Lite / Plus / Pro"|t('content-intelligence') }}</span>
         </div>
         <div class="ci-panel-body">
@@ -56,7 +58,7 @@
                         label: "Min Title Length (Characters)"|t('content-intelligence'),
                         id: 'minTitleLength',
                         name: 'settings[minTitleLength]',
-                        value: settings.minTitleLength,
+                        value: settings.getForSite('minTitleLength', activeSite.id),
                         type: 'number'
                     }) }}
                 </div>
@@ -65,7 +67,7 @@
                         label: "Max Title Length (Characters)"|t('content-intelligence'),
                         id: 'maxTitleLength',
                         name: 'settings[maxTitleLength]',
-                        value: settings.maxTitleLength,
+                        value: settings.getForSite('maxTitleLength', activeSite.id),
                         type: 'number'
                     }) }}
                 </div>
@@ -77,7 +79,7 @@
                         label: "Min Meta Description Length"|t('content-intelligence'),
                         id: 'minDescriptionLength',
                         name: 'settings[minDescriptionLength]',
-                        value: settings.minDescriptionLength,
+                        value: settings.getForSite('minDescriptionLength', activeSite.id),
                         type: 'number'
                     }) }}
                 </div>
@@ -86,7 +88,7 @@
                         label: "Max Meta Description Length"|t('content-intelligence'),
                         id: 'maxDescriptionLength',
                         name: 'settings[maxDescriptionLength]',
-                        value: settings.maxDescriptionLength,
+                        value: settings.getForSite('maxDescriptionLength', activeSite.id),
                         type: 'number'
                     }) }}
                 </div>
@@ -96,7 +98,7 @@
 
     <div class="ci-panel">
         <div class="ci-panel-header">
-            <h2>{{ "AI Configuration (BYOK)"|t('content-intelligence') }}</h2>
+            <h2>{{ "AI Configuration (BYOK)"|t('content-intelligence') }} <span style="font-size: 0.85rem; font-weight: normal; color: #64748b; margin-left: 0.5rem;">({{ activeSite.name }})</span></h2>
             <span class="ci-edition-badge ci-badge-plus">{{ "Plus & Pro"|t('content-intelligence') }}</span>
         </div>
         <div class="ci-panel-body">
@@ -109,7 +111,7 @@
                 instructions: "Your secret OpenAI API key or an environment variable reference."|t('content-intelligence'),
                 id: 'openaiApiKey',
                 name: 'settings[openaiApiKey]',
-                value: settings.openaiApiKey,
+                value: settings.getForSite('openaiApiKey', activeSite.id),
                 suggestEnvVars: true,
                 placeholder: '$OPENAI_API_KEY'
             }) }}
@@ -119,7 +121,7 @@
                 instructions: "Default model used for completions and suggestions."|t('content-intelligence'),
                 id: 'openaiModel',
                 name: 'settings[openaiModel]',
-                value: settings.openaiModel
+                value: settings.getForSite('openaiModel', activeSite.id)
             }) }}
 
             <div style="margin-top: 1.5rem; display: flex; align-items: center; gap: 1rem;">
@@ -134,7 +136,7 @@
 
     <div class="ci-panel">
         <div class="ci-panel-header">
-            <h2>{{ "Vector Database & Semantic Intelligence"|t('content-intelligence') }}</h2>
+            <h2>{{ "Vector Database & Semantic Intelligence"|t('content-intelligence') }} <span style="font-size: 0.85rem; font-weight: normal; color: #64748b; margin-left: 0.5rem;">({{ activeSite.name }})</span></h2>
             <span class="ci-edition-badge ci-badge-pro">{{ "Pro"|t('content-intelligence') }}</span>
         </div>
         <div class="ci-panel-body">
@@ -143,7 +145,7 @@
                 instructions: "URL to your self-hosted or Qdrant Cloud cluster."|t('content-intelligence'),
                 id: 'qdrantUrl',
                 name: 'settings[qdrantUrl]',
-                value: settings.qdrantUrl,
+                value: settings.getForSite('qdrantUrl', activeSite.id),
                 suggestEnvVars: true,
                 placeholder: '$QDRANT_URL'
             }) }}
@@ -153,7 +155,7 @@
                 instructions: "Leave blank if your local Qdrant instance does not require authentication."|t('content-intelligence'),
                 id: 'qdrantApiKey',
                 name: 'settings[qdrantApiKey]',
-                value: settings.qdrantApiKey,
+                value: settings.getForSite('qdrantApiKey', activeSite.id),
                 suggestEnvVars: true,
                 placeholder: '$QDRANT_API_KEY'
             }) }}
@@ -162,7 +164,7 @@
                 label: "Qdrant Collection Name"|t('content-intelligence'),
                 id: 'qdrantCollection',
                 name: 'settings[qdrantCollection]',
-                value: settings.qdrantCollection
+                value: settings.getForSite('qdrantCollection', activeSite.id)
             }) }}
 
             <div style="margin-top: 1.5rem; display: flex; align-items: center; gap: 1rem;">

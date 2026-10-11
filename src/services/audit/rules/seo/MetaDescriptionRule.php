@@ -25,8 +25,8 @@ class MetaDescriptionRule extends BaseSeoAuditRule
     public function run(Entry $entry): ?AuditResult
     {
         $settings = Plugin::getInstance()->getSettings();
-        $minLen = $settings->minDescriptionLength ?? 70;
-        $maxLen = $settings->maxDescriptionLength ?? 160;
+        $minLen = (int)$settings->getForSite('minDescriptionLength', (int)$entry->siteId) ?: 70;
+        $maxLen = (int)$settings->getForSite('maxDescriptionLength', (int)$entry->siteId) ?: 160;
 
         $description = $this->resolveMetaDescription($entry);
         $length = mb_strlen($description);

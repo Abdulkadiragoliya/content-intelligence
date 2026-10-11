@@ -4,14 +4,14 @@
 {% set selectedSubnavItem = 'audit' %}
 
 {% block pageActions %}
-    <a href="{{ cpUrl('content-intelligence/audit/export') }}" class="btn" style="margin-right: 0.5rem;">
+    <a href="{{ cpUrl('content-intelligence/audit/export', { site: currentSite.handle }) }}" class="btn" style="margin-right: 0.5rem;">
         <span class="icon" data-icon="download"></span>
         {{ "Export Report (CSV)"|t('content-intelligence') }}
     </a>
     <form method="post" action="{{ cpUrl('content-intelligence/audit/run') }}" style="display: inline-block;">
         {{ csrfInput() }}
         {{ actionInput('content-intelligence/audit/run') }}
-        {{ redirectInput('content-intelligence/audit') }}
+        <input type="hidden" name="siteId" value="{{ currentSite.id }}">
         <button type="submit" class="btn submit">
             <span class="icon" data-icon="refresh"></span>
             {{ "Scan Entire Site"|t('content-intelligence') }}
@@ -129,14 +129,15 @@
                                 </td>
                                 <td>
                                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                        <a href="{{ cpUrl('content-intelligence/audit/' ~ entry.id) }}" class="btn small">
+                                        <a href="{{ cpUrl('content-intelligence/audit/' ~ entry.id, { site: currentSite.handle }) }}" class="btn small">
                                             {{ "Inspect"|t('content-intelligence') }}
                                         </a>
                                         <form method="post" action="{{ cpUrl('content-intelligence/audit/audit-entry/' ~ entry.id) }}" style="display: inline;">
                                             {{ csrfInput() }}
                                             {{ actionInput('content-intelligence/audit/audit-entry') }}
                                             <input type="hidden" name="entryId" value="{{ entry.id }}">
-                                            {{ redirectInput('content-intelligence/audit') }}
+                                            <input type="hidden" name="site" value="{{ currentSite.handle }}">
+                                            {{ redirectInput(cpUrl('content-intelligence/audit', { site: currentSite.handle })) }}
                                             <button type="submit" class="btn small" title="{{ 'Re-scan this entry'|t('content-intelligence') }}">
                                                 {{ "Scan"|t('content-intelligence') }}
                                             </button>

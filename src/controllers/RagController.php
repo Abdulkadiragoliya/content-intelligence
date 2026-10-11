@@ -47,7 +47,7 @@ class RagController extends Controller
         $this->requirePermission('contentIntelligence:askWebsite');
 
         $plugin = Plugin::getInstance();
-        $site = Craft::$app->getSites()->getCurrentSite();
+        $site = $plugin->getActiveSite();
 
         return $this->renderTemplate('content-intelligence/rag/index', [
             'edition' => $plugin->getActiveEdition(),
@@ -77,7 +77,9 @@ class RagController extends Controller
         }
 
         $question = (string)$this->request->getBodyParam('question', '');
-        $site = Craft::$app->getSites()->getCurrentSite();
+        $siteId = (int)$this->request->getBodyParam('siteId');
+        $site = $siteId ? Craft::$app->getSites()->getSiteById($siteId) : $plugin->getActiveSite();
+        $site = $site ?? $plugin->getActiveSite();
 
         if (empty(trim($question))) {
             return $this->asJson([
@@ -105,7 +107,7 @@ class RagController extends Controller
             ]);
         }
 
-        $site = Craft::$app->getSites()->getCurrentSite();
+        $site = $plugin->getActiveSite();
         $limit = max(1, min(10, (int)$this->request->getParam('limit', 4)));
 
         $recommendations = $plugin->rag->getRecommendations($entryId, $site->id, $limit);

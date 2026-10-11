@@ -9,7 +9,7 @@
             <form method="post" action="{{ cpUrl('content-intelligence/semantic/prune') }}" style="display: inline-block;">
                 {{ csrfInput() }}
                 {{ actionInput('content-intelligence/semantic/prune') }}
-                {{ redirectInput('content-intelligence/semantic') }}
+                {{ redirectInput(cpUrl('content-intelligence/semantic', { site: currentSite.handle })) }}
                 <button type="submit" class="btn" title="{{ 'Remove orphaned chunks for deleted entries'|t('content-intelligence') }}">
                     <span class="icon" data-icon="trash"></span>
                     {{ "Prune Orphans"|t('content-intelligence') }}
@@ -19,7 +19,8 @@
             <form method="post" action="{{ cpUrl('content-intelligence/semantic/run') }}" style="display: inline-block;">
                 {{ csrfInput() }}
                 {{ actionInput('content-intelligence/semantic/run-index') }}
-                {{ redirectInput('content-intelligence/semantic') }}
+                <input type="hidden" name="siteId" value="{{ currentSite.id }}">
+                {{ redirectInput(cpUrl('content-intelligence/semantic', { site: currentSite.handle })) }}
                 <button type="submit" class="btn submit">
                     <span class="icon" data-icon="refresh"></span>
                     {{ "Index Entire Website"|t('content-intelligence') }}
@@ -221,7 +222,7 @@
                                 <td style="text-align: right; padding-right: 1.5rem;">
                                     <div style="display: inline-flex; gap: 0.4rem; align-items: center;">
                                         {% if item.chunkCount > 0 %}
-                                            <a href="{{ cpUrl('content-intelligence/semantic/chunks/' ~ entry.id) }}" class="btn small" title="{{ 'View chunks breakdown'|t('content-intelligence') }}">
+                                            <a href="{{ cpUrl('content-intelligence/semantic/chunks/' ~ entry.id, { site: currentSite.handle }) }}" class="btn small" title="{{ 'View chunks breakdown'|t('content-intelligence') }}">
                                                 <span class="icon" data-icon="view"></span>
                                                 {{ "Inspect Chunks"|t('content-intelligence') }}
                                             </a>
@@ -231,7 +232,8 @@
                                             {{ csrfInput() }}
                                             {{ actionInput('content-intelligence/semantic/index-entry') }}
                                             <input type="hidden" name="entryId" value="{{ entry.id }}">
-                                            {{ redirectInput('content-intelligence/semantic') }}
+                                            <input type="hidden" name="site" value="{{ currentSite.handle }}">
+                                            {{ redirectInput(cpUrl('content-intelligence/semantic', { site: currentSite.handle })) }}
                                             <button type="submit" class="btn small submit" title="{{ 'Chunk and index this entry now'|t('content-intelligence') }}">
                                                 <span class="icon" data-icon="refresh"></span>
                                                 {{ item.chunkCount > 0 ? "Re-index"|t('content-intelligence') : "Index Now"|t('content-intelligence') }}
@@ -271,6 +273,7 @@
 
             Craft.postActionRequest('content-intelligence/semantic/search', {
                 query: query,
+                siteId: {{ currentSite.id }},
                 limit: 6
             }, function(response, textStatus) {
                 $btn.removeClass('disabled');

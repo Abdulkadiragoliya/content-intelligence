@@ -2,6 +2,9 @@
 
 {% set title = title ?? "Content Intelligence"|t('content-intelligence') %}
 {% set selectedSubnavItem = selectedSubnavItem ?? 'dashboard' %}
+{% set requestedSiteHandle = craft.app.request.getQueryParam('site') %}
+{% set requestedSite = requestedSiteHandle ? craft.app.sites.getSiteByHandle(requestedSiteHandle) : null %}
+{% set activeSite = requestedSite ?? currentSite ?? craft.app.sites.currentSite %}
 
 {% block content %}
     <div class="ci-container">
@@ -17,11 +20,54 @@
                     {{ "AI-powered Content & SEO Intelligence for Craft CMS"|t('content-intelligence') }}
                 </div>
             </div>
-            <div class="ci-header-actions">
+            <div class="ci-header-actions" style="display: flex; align-items: center; gap: 0.75rem;">
+                {% set ciSiteIds = craft.app.sites.getEditableSiteIds()|length > 0 ? craft.app.sites.getEditableSiteIds() : craft.app.sites.getAllSiteIds() %}
+                {% if ciSiteIds|length > 1 %}
+                    <div class="ci-site-switcher">
+                        {% include "_elements/sitemenu" with {
+                            siteIds: ciSiteIds,
+                            selectedSiteId: activeSite.id,
+                            urlFormat: cpUrl('content-intelligence/' ~ (selectedSubnavItem == 'dashboard' ? '' : selectedSubnavItem), { site: '{handle}' })
+                        } %}
+                    </div>
+                {% endif %}
                 {% block pageActions %}{% endblock %}
             </div>
         </div>
 
         {% block ciContent %}{% endblock %}
     </div>
+
+    {% js %}
+        $(function() {
+            var $ciNav = $('#nav-content-intelligence');
+            if ($ciNav.length) {
+                $ciNav.find('> .nav-item').addClass('sel');
+                $ciNav.find('craft-disclosure').attr('state', 'expanded');
+                $ciNav.find('craft-disclosure button').attr('aria-expanded', 'true');
+                $ciNav.find('.nav-item__subnav').attr('data-state', 'expanded');
+
+                var subKey = '{{ selectedSubnavItem }}';
+                if (subKey) {
+                    $ciNav.find('.nav-item--sub').removeClass('sel').find('.sidebar-action').removeClass('sel');
+                    var $target = $ciNav.find('.nav-item--sub a[href*="content-intelligence/' + subKey + '"]').first();
+                    if (subKey === 'dashboard') {
+                        $target = $ciNav.find('.nav-item--sub a').filter(function() {
+                            var h = $(this).attr('href') || '';
+                            return h.indexOf('content-intelligence/audit') === -1 &&
+                                   h.indexOf('content-intelligence/seo') === -1 &&
+                                   h.indexOf('content-intelligence/ai') === -1 &&
+                                   h.indexOf('content-intelligence/semantic') === -1 &&
+                                   h.indexOf('content-intelligence/rag') === -1 &&
+                                   h.indexOf('content-intelligence/settings') === -1 &&
+                                   (h.endsWith('content-intelligence') || h.endsWith('content-intelligence/'));
+                        }).first();
+                    }
+                    if ($target.length) {
+                        $target.addClass('sel').closest('.nav-item--sub').addClass('sel');
+                    }
+                }
+            }
+        });
+    {% endjs %}
 {% endblock %}

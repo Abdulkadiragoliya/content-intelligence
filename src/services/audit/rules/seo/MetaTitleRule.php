@@ -25,8 +25,8 @@ class MetaTitleRule extends BaseSeoAuditRule
     public function run(Entry $entry): ?AuditResult
     {
         $settings = Plugin::getInstance()->getSettings();
-        $minLen = $settings->minTitleLength ?? 30;
-        $maxLen = $settings->maxTitleLength ?? 60;
+        $minLen = (int)$settings->getForSite('minTitleLength', (int)$entry->siteId) ?: 30;
+        $maxLen = (int)$settings->getForSite('maxTitleLength', (int)$entry->siteId) ?: 60;
 
         $title = $this->resolveMetaTitle($entry);
         $length = mb_strlen($title);

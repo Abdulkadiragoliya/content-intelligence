@@ -25,7 +25,7 @@ class ThinContentRule extends BaseAuditRule
     public function run(Entry $entry): ?AuditResult
     {
         $settings = Plugin::getInstance()->getSettings();
-        $minWords = $settings->minContentWordCount ?? 300;
+        $minWords = (int)$settings->getForSite('minContentWordCount', (int)$entry->siteId) ?: 300;
 
         $text = $this->extractText($entry);
         $wordCount = $this->countWords($text);

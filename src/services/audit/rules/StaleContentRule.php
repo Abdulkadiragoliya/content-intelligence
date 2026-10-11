@@ -26,7 +26,7 @@ class StaleContentRule extends BaseAuditRule
     public function run(Entry $entry): ?AuditResult
     {
         $settings = Plugin::getInstance()->getSettings();
-        $staleDays = $settings->staleContentDays ?? 180;
+        $staleDays = (int)$settings->getForSite('staleContentDays', (int)$entry->siteId) ?: 180;
 
         if (!$entry->dateUpdated) {
             return null;

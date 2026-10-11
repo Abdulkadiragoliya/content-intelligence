@@ -4,7 +4,7 @@
 {% set selectedSubnavItem = 'dashboard' %}
 
 {% block pageActions %}
-    <a href="{{ cpUrl('content-intelligence/audit') }}" class="btn submit">
+    <a href="{{ cpUrl('content-intelligence/audit', { site: currentSite.handle }) }}" class="btn submit">
         {{ "Run Content Audit"|t('content-intelligence') }}
     </a>
 {% endblock %}

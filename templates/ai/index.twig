@@ -27,7 +27,7 @@
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <label for="ci-entry-selector" style="font-size: 13px; font-weight: 600; color: #475569;">{{ "Select Entry:"|t('content-intelligence') }}</label>
-                <select id="ci-entry-selector" class="select" onchange="window.location.href='{{ url('content-intelligence/ai') }}?entryId=' + this.value">
+                <select id="ci-entry-selector" class="select" onchange="window.location.href='{{ cpUrl('content-intelligence/ai', { site: currentSite.handle }) }}&entryId=' + this.value">
                     {% for ent in entries %}
                         <option value="{{ ent.id }}" {% if selectedEntry and selectedEntry.id == ent.id %}selected{% endif %}>
                             {{ ent.title }} ({{ ent.section.name ?? 'Entry' }})
@@ -54,10 +54,10 @@
                         </p>
                     </div>
                     <div>
-                        <a href="{{ url('content-intelligence/seo/' ~ selectedEntry.id) }}" class="btn small">
+                        <a href="{{ cpUrl('content-intelligence/seo/' ~ selectedEntry.id, { site: currentSite.handle }) }}" class="btn small">
                             {{ "View SEO Audit"|t('content-intelligence') }}
                         </a>
-                        <a href="{{ url('content-intelligence/audit/' ~ selectedEntry.id) }}" class="btn small">
+                        <a href="{{ cpUrl('content-intelligence/audit/' ~ selectedEntry.id, { site: currentSite.handle }) }}" class="btn small">
                             {{ "View Content Audit"|t('content-intelligence') }}
                         </a>
                     </div>

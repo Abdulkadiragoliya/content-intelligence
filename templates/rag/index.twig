@@ -4,7 +4,7 @@
 {% set selectedSubnavItem = 'rag' %}
 
 {% block pageActions %}
-    <a href="{{ url('content-intelligence/semantic') }}" class="btn">
+    <a href="{{ cpUrl('content-intelligence/semantic', { site: currentSite.handle }) }}" class="btn">
         <span class="icon" data-icon="search"></span>
         {{ "Knowledge Base & Chunks"|t('content-intelligence') }}
     </a>
@@ -195,7 +195,8 @@
             $btn.addClass('disabled');
 
             Craft.postActionRequest('content-intelligence/rag/ask', {
-                question: text
+                question: text,
+                siteId: {{ currentSite.id }}
             }, function(response, textStatus) {
                 $btn.removeClass('disabled');
                 $('#' + thinkingId).remove();

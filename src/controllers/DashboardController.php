@@ -20,7 +20,7 @@ class DashboardController extends Controller
         $this->requirePermission('contentIntelligence:viewDashboard');
 
         $plugin = Plugin::getInstance();
-        $site = Craft::$app->getSites()->getCurrentSite();
+        $site = $plugin->getActiveSite();
         $stats = $plugin->audit->getAuditStats($site->id);
         $edition = $plugin->getActiveEdition();
 

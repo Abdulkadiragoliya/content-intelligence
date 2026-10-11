@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2026-10-11
+
+### Fixed
+- **Multi-site Settings Isolation**: Fixed per-site settings overrides so saving thresholds (e.g. minimum content word count, content stale threshold, SEO title/description lengths) for one site no longer mutates or leaks into other sites. Added clean static defaults via `Settings::getForSite()`.
+- **Navigation Sidebar Auto-Expansion & Active Item Highlight**: Normalized Control Panel subnav URLs to clean paths, enabling native Craft CMS navigation matching (`item.sel = true`), automatic disclosure expansion (`<craft-disclosure state="expanded">`), and proper `.sel` active highlighting on all plugin pages while preserving active site context via session persistence.
+- **Site Dropdown & URL Normalization**: Resolved duplicate `?site=` parameter collisions (`?site=default?site=gravesendSteel`) by building URLs with Craft's parameter dictionary (`cpUrl(path, { site: handle })`). Explicitly bound `selectedSiteId` in `_elements/sitemenu` so the active site title displays accurately with the checkmark.
+- **Audit Rules Multi-site Scoping**: Updated `ThinContentRule`, `StaleContentRule`, `MetaTitleRule`, and `MetaDescriptionRule` to evaluate entries using their specific site's configured thresholds (`$settings->getForSite($prop, $entry->siteId)`).
+- **Semantic Knowledge Base Batch Indexing**: Fixed "Index Entire Website" to target the active selected site rather than falling back to the primary site. Added direct in-request batch processing for sites with up to 50 entries so status updates immediately to 100% indexed without waiting on a detached queue worker.
+- **Site Parameter Preservation Across All Views**: Updated inspect, re-index, and scan action links and forms across Dashboard, Content Audit, SEO Audit, AI Assistant, Semantic Search, and Ask Your Website (RAG) to seamlessly preserve the active site context.
+
 ## [1.0.4] - 2026-10-11
 
 ### Changed
