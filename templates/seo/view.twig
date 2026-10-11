@@ -133,11 +133,11 @@
         </div>
 
         <div class="ci-panel-body">
-            {% if not hasPro %}
+            {% if not (hasPlus or hasPro) %}
                 <div class="ci-upgrade-banner" style="margin-bottom: 0;">
-                    <h3>{{ "Unlock AI SEO Intelligence with Pro"|t('content-intelligence') }}</h3>
+                    <h3>{{ "Unlock AI SEO Intelligence with Plus"|t('content-intelligence') }}</h3>
                     <p>{{ "Analyze real search intent fulfillment, detect missing topical subtopics, identify high-authority semantic entities, and receive competitive angle advice tailored to your content."|t('content-intelligence') }}</p>
-                    <a href="https://plugins.craftcms.com" target="_blank" class="btn submit" style="margin-top: 0.75rem;">{{ "Upgrade to Pro"|t('content-intelligence') }}</a>
+                    <a href="https://plugins.craftcms.com" target="_blank" class="btn submit" style="margin-top: 0.75rem;">{{ "Upgrade to Plus"|t('content-intelligence') }}</a>
                 </div>
             {% else %}
                 {% if not aiHealth.configured %}

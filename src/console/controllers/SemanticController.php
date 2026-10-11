@@ -35,8 +35,8 @@ class SemanticController extends Controller
         $this->stdout("--- Content Intelligence Semantic Indexer ---\n", Console::FG_CYAN, Console::BOLD);
 
         $plugin = Plugin::getInstance();
-        if (!$plugin->hasPlus()) {
-            $this->stderr("Error: Semantic knowledge base indexing requires Content Intelligence Plus edition.\n", Console::FG_RED);
+        if (!$plugin->hasPro()) {
+            $this->stderr("Error: Semantic knowledge base indexing requires Content Intelligence Pro edition.\n", Console::FG_RED);
             return ExitCode::UNSPECIFIED_ERROR;
         }
 
@@ -70,8 +70,8 @@ class SemanticController extends Controller
         $this->stdout("Pruning orphaned knowledge chunks...\n", Console::FG_CYAN);
 
         $plugin = Plugin::getInstance();
-        if (!$plugin->hasPlus()) {
-            $this->stderr("Error: Requires Plus edition.\n", Console::FG_RED);
+        if (!$plugin->hasPro()) {
+            $this->stderr("Error: Requires Pro edition.\n", Console::FG_RED);
             return ExitCode::UNSPECIFIED_ERROR;
         }
 

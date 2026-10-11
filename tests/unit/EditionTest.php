@@ -11,29 +11,29 @@ class EditionTest extends TestCase
     public function testEditionConstants(): void
     {
         $this->assertSame('lite', Plugin::EDITION_LITE);
-        $this->assertSame('pro', Plugin::EDITION_PRO);
         $this->assertSame('plus', Plugin::EDITION_PLUS);
-        $this->assertSame('plus', Plugin::EDITION_AGENCY);
+        $this->assertSame('pro', Plugin::EDITION_PRO);
+        $this->assertSame('pro', Plugin::EDITION_AGENCY);
     }
 
     public function testEditionsList(): void
     {
-        $this->assertSame(['lite', 'pro', 'plus'], Plugin::editions());
+        $this->assertSame(['lite', 'plus', 'pro'], Plugin::editions());
     }
 
     public function testEditionCapabilityLogic(): void
     {
-        // Pro features are available in Pro and Plus
-        $proCapableEditions = [Plugin::EDITION_PRO, Plugin::EDITION_PLUS];
-        $this->assertTrue(in_array('pro', $proCapableEditions, true));
-        $this->assertTrue(in_array('plus', $proCapableEditions, true));
-        $this->assertFalse(in_array('lite', $proCapableEditions, true));
+        // Plus features (AI Assistant) are available in Plus and Pro
+        $plusCapableEditions = [Plugin::EDITION_PLUS, Plugin::EDITION_PRO];
+        $this->assertTrue(in_array('plus', $plusCapableEditions, true));
+        $this->assertTrue(in_array('pro', $plusCapableEditions, true));
+        $this->assertFalse(in_array('lite', $plusCapableEditions, true));
 
-        // Plus features are strictly available in Plus
-        $plusOnly = fn(string $ed) => $ed === Plugin::EDITION_PLUS;
-        $this->assertTrue($plusOnly('plus'));
-        $this->assertFalse($plusOnly('pro'));
-        $this->assertFalse($plusOnly('lite'));
+        // Pro features (Semantic Search & RAG) are strictly available in Pro
+        $proOnly = fn(string $ed) => $ed === Plugin::EDITION_PRO;
+        $this->assertTrue($proOnly('pro'));
+        $this->assertFalse($proOnly('plus'));
+        $this->assertFalse($proOnly('lite'));
     }
 
     public function testLocalEnvironmentDomainPatterns(): void

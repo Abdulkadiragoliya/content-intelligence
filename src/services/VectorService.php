@@ -11,7 +11,7 @@ use abdulkadiragoliya\contentintelligence\services\vector\QdrantClient;
 
 /**
  * Service managing intelligent semantic chunking, hash-based incremental indexing,
- * vector embeddings, Qdrant synchronization, and hybrid search for Plus edition.
+ * vector embeddings, Qdrant synchronization, and hybrid search for Pro edition.
  */
 class VectorService extends Component
 {
@@ -178,7 +178,7 @@ class VectorService extends Component
      */
     public function indexEntry(Entry $entry, bool $generateVectors = true): array
     {
-        $this->requirePlusEdition();
+        $this->requireProEdition();
 
         $chunks = $this->chunkEntry($entry);
         $siteId = $entry->siteId;
@@ -303,7 +303,7 @@ class VectorService extends Component
      */
     public function indexSite(int $siteId, bool $generateVectors = true): array
     {
-        $this->requirePlusEdition();
+        $this->requireProEdition();
 
         $entries = Entry::find()
             ->siteId($siteId)
@@ -344,7 +344,7 @@ class VectorService extends Component
      */
     public function hybridSearch(string $query, int $siteId, int $limit = 5, array $options = []): array
     {
-        $this->requirePlusEdition();
+        $this->requireProEdition();
 
         $cleanQuery = trim($query);
         if (empty($cleanQuery)) {
@@ -695,20 +695,28 @@ class VectorService extends Component
     }
 
     /**
-     * Enforce Plus edition requirement.
+     * Enforce Pro edition requirement.
      */
-    protected function requirePlusEdition(): void
+    protected function requireProEdition(): void
     {
-        if (!Plugin::getInstance()->hasPlus()) {
-            throw new \RuntimeException('Semantic Search and Vector Knowledge Base requires Content Intelligence Plus edition.');
+        if (!Plugin::getInstance()->hasPro()) {
+            throw new \RuntimeException('Semantic Search and Vector Knowledge Base requires Content Intelligence Pro edition.');
         }
     }
 
     /**
-     * Compatibility alias for requirePlusEdition.
+     * Compatibility alias.
+     */
+    protected function requirePlusEdition(): void
+    {
+        $this->requireProEdition();
+    }
+
+    /**
+     * Compatibility alias for requireProEdition.
      */
     protected function requireAgencyEdition(): void
     {
-        $this->requirePlusEdition();
+        $this->requireProEdition();
     }
 }

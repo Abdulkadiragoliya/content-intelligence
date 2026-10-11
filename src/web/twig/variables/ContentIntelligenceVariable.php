@@ -52,7 +52,47 @@ class ContentIntelligenceVariable
     }
 
     /**
-     * Get semantically related Entry elements for frontend recommendations (Plus Edition).
+     * Check if active edition has Plus tier features (Plus or Pro).
+     */
+    public function hasPlus(): bool
+    {
+        return Plugin::getInstance()->hasPlus();
+    }
+
+    /**
+     * Check if active edition has Pro tier features.
+     */
+    public function hasPro(): bool
+    {
+        return Plugin::getInstance()->hasPro();
+    }
+
+    /**
+     * Check if AI assistant is unlocked.
+     */
+    public function hasAi(): bool
+    {
+        return Plugin::getInstance()->hasAi();
+    }
+
+    /**
+     * Check if vector DB is unlocked.
+     */
+    public function hasVector(): bool
+    {
+        return Plugin::getInstance()->hasVector();
+    }
+
+    /**
+     * Check if RAG is unlocked.
+     */
+    public function hasRag(): bool
+    {
+        return Plugin::getInstance()->hasRag();
+    }
+
+    /**
+     * Get semantically related Entry elements for frontend recommendations (Pro Edition).
      *
      * @param int $entryId
      * @param int $limit
@@ -62,7 +102,7 @@ class ContentIntelligenceVariable
     public function getRelatedEntries(int $entryId, int $limit = 4, ?int $siteId = null): array
     {
         $plugin = Plugin::getInstance();
-        if (!$plugin->hasPlus()) {
+        if (!$plugin->hasPro()) {
             return [];
         }
 
@@ -83,12 +123,12 @@ class ContentIntelligenceVariable
     }
 
     /**
-     * Perform frontend Hybrid Search across site knowledge base (Plus Edition).
+     * Perform frontend Hybrid Search across site knowledge base (Pro Edition).
      */
     public function search(string $query, int $limit = 5, ?int $siteId = null): array
     {
         $plugin = Plugin::getInstance();
-        if (!$plugin->hasPlus()) {
+        if (!$plugin->hasPro()) {
             return [];
         }
 
@@ -105,7 +145,7 @@ class ContentIntelligenceVariable
         $plugin = Plugin::getInstance();
 
         $auditStats = $plugin->audit->getAuditStats($siteId);
-        $vectorStats = $plugin->hasPlus() ? $plugin->vector->getIndexStats($siteId) : [];
+        $vectorStats = $plugin->hasPro() ? $plugin->vector->getIndexStats($siteId) : [];
 
         return [
             'audit' => $auditStats,

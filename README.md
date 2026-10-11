@@ -15,7 +15,7 @@ Content Intelligence is a production-grade, commercial Craft CMS 5 plugin design
 * **Interactive SERP Preview**: Live desktop and mobile Google search snippet preview cards with character counters and truncation warnings.
 * **Automated Scoring (0–100)**: Transparent weighting and health badges (Good, Needs Review, Critical).
 
-### 🔵 Pro Edition ($99/yr)
+### 🔵 Plus Edition ($99/yr)
 * *Everything in Lite, plus:*
 * **AI Content Assistant (BYOK OpenAI)**: Bring Your Own Key architecture (supports `$OPENAI_API_KEY` in `.env`).
 * **Entry Editor Slideout**: Integrated seamlessly with Craft 5's native `Craft.Slideout` UI directly inside the entry sidebar.
@@ -26,8 +26,8 @@ Content Intelligence is a production-grade, commercial Craft CMS 5 plugin design
 * **Deep AI SEO Intelligence**: Single-pass semantic audit identifying search intent (informational, commercial, navigational, transactional), content depth gaps, semantic entities, and competitive differentiation opportunities.
 * **Strict Human-in-the-Loop**: All AI suggestions require explicit human approval and staging before being applied to Craft entries.
 
-### 🟣 Plus Edition ($249/yr)
-* *Everything in Pro, plus:*
+### 🟣 Pro Edition ($249/yr)
+* *Everything in Plus, plus:*
 * **Intelligent Heading-Aware Chunking**: Hierarchically partitions entry content into coherent ~400-word sections under document heading contexts.
 * **Incremental Hash-Based Indexing**: SHA-256 fingerprinting skips unchanged chunks during bulk scans (zero API cost and instant re-indexes).
 * **Qdrant Vector DB Integration**: REST client connecting to self-hosted Qdrant instances (`http://localhost:6333`) or Qdrant Cloud clusters with automatic Cosine distance collection provisioning.
@@ -42,8 +42,8 @@ Content Intelligence is a production-grade, commercial Craft CMS 5 plugin design
 * Craft CMS `^5.0.0`
 * PHP `^8.2.0`
 * MySQL 8.0+ or PostgreSQL 13+
-* Optional (Pro/Plus): OpenAI API key (`gpt-4o-mini`, `gpt-4o`, `text-embedding-3-small`)
-* Optional (Plus): Qdrant cluster (Local Docker or Qdrant Cloud)
+* Optional (Plus/Pro): OpenAI API key (`gpt-4o-mini`, `gpt-4o`, `text-embedding-3-small`)
+* Optional (Pro): Qdrant cluster (Local Docker or Qdrant Cloud)
 
 ---
 
@@ -61,14 +61,14 @@ php craft plugin/install content-intelligence
 Add any of the following optional environment variables to your `.env` file:
 
 ```env
-# Local Development Only: test different tiers (lite | pro | plus)
+# Local Development Only: test different tiers (lite | plus | pro)
 # (In production, the edition is securely managed by your Craft Plugin Store license)
 CONTENT_INTELLIGENCE_EDITION=plus
 
-# OpenAI API Key (Pro & Plus)
+# OpenAI API Key (Plus & Pro)
 OPENAI_API_KEY=sk-...
 
-# Qdrant Vector DB (Plus)
+# Qdrant Vector DB (Pro)
 QDRANT_URL=http://localhost:6333
 QDRANT_API_KEY=
 QDRANT_COLLECTION=content_intelligence

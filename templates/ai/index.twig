@@ -4,15 +4,15 @@
 {% set selectedSubnavItem = 'ai' %}
 
 {% block ciContent %}
-    {% if not hasPro %}
+    {% if not (hasPlus or hasPro) %}
         <div class="ci-upgrade-banner">
-            <h3>{{ "Upgrade to Pro for AI Content Intelligence"|t('content-intelligence') }}</h3>
+            <h3>{{ "Upgrade to Plus for AI Content Intelligence"|t('content-intelligence') }}</h3>
             <p>
                 {{ "The AI Content Assistant uses your own OpenAI API key (BYOK) to analyze content depth, generate meta titles and descriptions, draft alt-text, generate FAQs, and recommend content improvements with human-in-the-loop approval."|t('content-intelligence') }}
             </p>
             <p style="margin-top: 1rem;">
                 <a href="https://plugins.craftcms.com" target="_blank" rel="noopener" class="btn submit">
-                    {{ "Upgrade to Pro Edition"|t('content-intelligence') }}
+                    {{ "Upgrade to Plus Edition"|t('content-intelligence') }}
                 </a>
             </p>
         </div>
@@ -23,7 +23,7 @@
         <div class="ci-panel-header" style="display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <h2 style="margin: 0;">{{ "AI Content Intelligence Workspace"|t('content-intelligence') }}</h2>
-                <span class="ci-edition-badge ci-badge-pro">{{ "Pro & Plus"|t('content-intelligence') }}</span>
+                <span class="ci-edition-badge ci-badge-plus">{{ "Plus & Pro"|t('content-intelligence') }}</span>
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <label for="ci-entry-selector" style="font-size: 13px; font-weight: 600; color: #475569;">{{ "Select Entry:"|t('content-intelligence') }}</label>
@@ -558,11 +558,11 @@
         var entryTitle = $('#ci-workspace-entry-title').val();
         var entryBody = $('#ci-workspace-entry-body').text();
         var faqsCache = [];
-        var hasPro = {{ hasPro ? 'true' : 'false' }};
+        var hasAiAccess = {{ (hasPlus or hasPro) ? 'true' : 'false' }};
 
         function checkProLicense() {
-            if (!hasPro) {
-                Craft.cp.displayNotice('{{ "AI Assistant features require Content Intelligence Pro edition. Please upgrade your license to unlock."|t("content-intelligence")|e("js") }}');
+            if (!hasAiAccess) {
+                Craft.cp.displayNotice('{{ "AI Assistant features require Content Intelligence Plus edition. Please upgrade your license to unlock."|t("content-intelligence")|e("js") }}');
                 return false;
             }
             return true;

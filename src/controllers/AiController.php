@@ -36,11 +36,11 @@ class AiController extends Controller
             return true;
         }
 
-        // All AI generation and execution endpoints strictly require Pro or Plus edition
-        if (!Plugin::getInstance()->hasPro()) {
+        // All AI generation and execution endpoints strictly require Plus or Pro edition
+        if (!Plugin::getInstance()->hasPlus()) {
             $this->response->data = [
                 'success' => false,
-                'message' => Craft::t('content-intelligence', 'AI Assistant features require Content Intelligence Pro or Plus edition. Please upgrade your license to unlock.'),
+                'message' => Craft::t('content-intelligence', 'AI Assistant features require Content Intelligence Plus or Pro edition. Please upgrade your license to unlock.'),
                 'upgradeRequired' => true,
             ];
             $this->response->format = Response::FORMAT_JSON;
@@ -81,6 +81,7 @@ class AiController extends Controller
 
         return $this->renderTemplate('content-intelligence/ai/index', [
             'edition' => $plugin->getActiveEdition(),
+            'hasPlus' => $plugin->hasPlus(),
             'hasPro' => $plugin->hasPro(),
             'aiHealth' => $plugin->ai->getHealthStatus(),
             'entries' => $entries,
@@ -121,6 +122,7 @@ class AiController extends Controller
         return $this->renderTemplate('content-intelligence/_cp/slideout', [
             'entry' => $entry,
             'entryContent' => $entryContent,
+            'hasPlus' => $plugin->hasPlus(),
             'hasPro' => $plugin->hasPro(),
             'aiHealth' => $aiHealth,
             'siteId' => $siteId,

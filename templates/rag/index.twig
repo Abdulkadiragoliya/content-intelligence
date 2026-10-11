@@ -15,15 +15,15 @@
 {% endblock %}
 
 {% block ciContent %}
-    {% if not (hasPlus ?? hasAgency) %}
+    {% if not hasPro %}
         <div class="ci-upgrade-banner">
-            <h3>{{ "Upgrade to Plus for Grounded RAG Intelligence"|t('content-intelligence') }}</h3>
+            <h3>{{ "Upgrade to Pro for Grounded RAG Intelligence"|t('content-intelligence') }}</h3>
             <p>
                 {{ "Ask Your Website enables conversational inquiries strictly grounded in your indexed website content with transparent source citations, zero hallucination guardrails, and real-time retrieval."|t('content-intelligence') }}
             </p>
             <p style="margin-top: 1rem;">
                 <a href="https://plugins.craftcms.com" target="_blank" rel="noopener" class="btn submit">
-                    {{ "Upgrade to Plus Edition"|t('content-intelligence') }}
+                    {{ "Upgrade to Pro Edition"|t('content-intelligence') }}
                 </a>
             </p>
         </div>
@@ -175,11 +175,11 @@
             return div.innerHTML;
         }
 
-        var hasPlus = {{ (hasPlus ?? hasAgency) ? 'true' : 'false' }};
+        var hasPro = {{ hasPro ? 'true' : 'false' }};
 
         function sendQuestion() {
-            if (!hasPlus) {
-                Craft.cp.displayNotice('{{ "Ask Your Website RAG requires Content Intelligence Plus edition. Please upgrade your license to unlock."|t("content-intelligence")|e("js") }}');
+            if (!hasPro) {
+                Craft.cp.displayNotice('{{ "Ask Your Website RAG requires Content Intelligence Pro edition. Please upgrade your license to unlock."|t("content-intelligence")|e("js") }}');
                 return;
             }
 

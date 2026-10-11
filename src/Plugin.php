@@ -47,9 +47,9 @@ use craft\web\twig\variables\CraftVariable;
 class Plugin extends BasePlugin
 {
     public const EDITION_LITE = 'lite';
-    public const EDITION_PRO = 'pro';
     public const EDITION_PLUS = 'plus';
-    public const EDITION_AGENCY = 'plus'; // Compatibility alias for Plus edition
+    public const EDITION_PRO = 'pro';
+    public const EDITION_AGENCY = 'pro'; // Compatibility alias for top edition (Pro)
 
     public string $schemaVersion = '1.0.0';
     public bool $hasCpSection = true;
@@ -62,8 +62,8 @@ class Plugin extends BasePlugin
     {
         return [
             self::EDITION_LITE,
-            self::EDITION_PRO,
             self::EDITION_PLUS,
+            self::EDITION_PRO,
         ];
     }
 
@@ -153,9 +153,9 @@ class Plugin extends BasePlugin
             if ($override) {
                 $override = strtolower(trim((string)$override));
                 if ($override === 'agency') {
-                    $override = self::EDITION_PLUS;
+                    $override = self::EDITION_PRO;
                 }
-                if (in_array($override, [self::EDITION_LITE, self::EDITION_PRO, self::EDITION_PLUS], true)) {
+                if (in_array($override, [self::EDITION_LITE, self::EDITION_PLUS, self::EDITION_PRO], true)) {
                     return $override;
                 }
             }
@@ -163,9 +163,9 @@ class Plugin extends BasePlugin
             // In local development, also respect whatever edition is set in project config
             $edition = strtolower($this->edition ?: self::EDITION_LITE);
             if ($edition === 'agency') {
-                $edition = self::EDITION_PLUS;
+                $edition = self::EDITION_PRO;
             }
-            return in_array($edition, [self::EDITION_LITE, self::EDITION_PRO, self::EDITION_PLUS], true) ? $edition : self::EDITION_LITE;
+            return in_array($edition, [self::EDITION_LITE, self::EDITION_PLUS, self::EDITION_PRO], true) ? $edition : self::EDITION_LITE;
         }
 
         // =========================================================================
@@ -175,7 +175,7 @@ class Plugin extends BasePlugin
         // =========================================================================
         $edition = strtolower($this->edition ?: self::EDITION_LITE);
         if ($edition === 'agency') {
-            $edition = self::EDITION_PLUS;
+            $edition = self::EDITION_PRO;
         }
 
         // Free Lite edition requires no commercial license key
@@ -183,7 +183,7 @@ class Plugin extends BasePlugin
             return self::EDITION_LITE;
         }
 
-        // For Pro and Plus on production, verify that the license key is valid
+        // For Plus and Pro on production, verify that the license key is valid
         try {
             $licenseStatus = Craft::$app->getPlugins()->getPluginLicenseKeyStatus($this->handle);
             if (in_array($licenseStatus, [LicenseKeyStatus::Invalid, LicenseKeyStatus::Mismatched], true)) {
@@ -194,31 +194,57 @@ class Plugin extends BasePlugin
             Craft::error("Content Intelligence license check error: {$e->getMessage()}", __METHOD__);
         }
 
-        return in_array($edition, [self::EDITION_PRO, self::EDITION_PLUS], true) ? $edition : self::EDITION_LITE;
+        return in_array($edition, [self::EDITION_PLUS, self::EDITION_PRO], true) ? $edition : self::EDITION_LITE;
     }
 
     /**
-     * Check if Pro edition features are active.
-     */
-    public function hasPro(): bool
-    {
-        return in_array($this->getActiveEdition(), [self::EDITION_PRO, self::EDITION_PLUS], true);
-    }
-
-    /**
-     * Check if Plus edition features are active.
+     * Check if Plus edition features (AI Assistant) are active.
+     * Unlocked by Plus ($99) and Pro ($249).
      */
     public function hasPlus(): bool
     {
-        return $this->getActiveEdition() === self::EDITION_PLUS;
+        return in_array($this->getActiveEdition(), [self::EDITION_PLUS, self::EDITION_PRO], true);
     }
 
     /**
-     * Compatibility alias for hasPlus().
+     * Check if Pro edition features (Vector DB & RAG) are active.
+     * Top edition Pro ($249) only.
+     */
+    public function hasPro(): bool
+    {
+        return $this->getActiveEdition() === self::EDITION_PRO;
+    }
+
+    /**
+     * Semantic alias for AI features (Plus and Pro).
+     */
+    public function hasAi(): bool
+    {
+        return $this->hasPlus();
+    }
+
+    /**
+     * Semantic alias for Vector DB features (Pro only).
+     */
+    public function hasVector(): bool
+    {
+        return $this->hasPro();
+    }
+
+    /**
+     * Semantic alias for RAG features (Pro only).
+     */
+    public function hasRag(): bool
+    {
+        return $this->hasPro();
+    }
+
+    /**
+     * Compatibility alias for top edition (Pro).
      */
     public function hasAgency(): bool
     {
-        return $this->hasPlus();
+        return $this->hasPro();
     }
 
     /**
@@ -419,7 +445,9 @@ class Plugin extends BasePlugin
                 $html = $view->renderTemplate('content-intelligence/_cp/sidebar-badge', [
                     'entry' => $entry,
                     'audit' => $auditRecord,
+                    'isPlus' => $this->hasPlus(),
                     'isPro' => $this->hasPro(),
+                    'editionLabel' => $this->getActiveEdition(),
                     'aiConfigured' => $this->ai->isConfigured(),
                 ]);
 
@@ -474,20 +502,20 @@ class Plugin extends BasePlugin
             ],
         ];
 
-        // Pro & Plus feature navigation
+        // Plus feature navigation (AI Assistant in Plus and Pro)
         $subnav['ai'] = [
-            'label' => Craft::t('content-intelligence', 'AI Assistant') . ($this->hasPro() ? '' : ' (Pro)'),
+            'label' => Craft::t('content-intelligence', 'AI Assistant') . ($this->hasPlus() ? '' : ' (Plus)'),
             'url' => 'content-intelligence/ai',
         ];
 
-        // Plus feature navigation
+        // Pro feature navigation (Semantic & RAG in Pro)
         $subnav['semantic'] = [
-            'label' => Craft::t('content-intelligence', 'Semantic Search') . ($this->hasPlus() ? '' : ' (Plus)'),
+            'label' => Craft::t('content-intelligence', 'Semantic Search') . ($this->hasPro() ? '' : ' (Pro)'),
             'url' => 'content-intelligence/semantic',
         ];
 
         $subnav['rag'] = [
-            'label' => Craft::t('content-intelligence', 'Ask Your Website') . ($this->hasPlus() ? '' : ' (Plus)'),
+            'label' => Craft::t('content-intelligence', 'Ask Your Website') . ($this->hasPro() ? '' : ' (Pro)'),
             'url' => 'content-intelligence/rag',
         ];
 

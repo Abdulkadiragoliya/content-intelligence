@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2026-10-11
+
+### Changed
+- Reordered plugin editions to **Lite**, **Plus**, and **Pro** in standard Craft CMS 3-edition ascending hierarchy (`Lite` < `Plus` < `Pro`):
+  - **Lite** (Free): Deterministic offline content rules, SEO health audits, live Google SERP preview, and 0–100 health scoring.
+  - **Plus** ($99): Everything in Lite + Bring-Your-Own-Key OpenAI assistant, Native Craft 5 Entry Slideout, 1-click meta generator, side-by-side visual diff, Schema FAQ generator, alt text, and executive summaries.
+  - **Pro** ($249): Everything in Plus + Qdrant Vector DB, heading-aware chunking, hash-based incremental indexing, "Ask Your Website" RAG assistant, hybrid search (Vector + Lexical RRF), and multi-site CSV audit exports.
+- Updated `Plugin::editions()` order to `['lite', 'plus', 'pro']`.
+- Updated feature access gates: `hasPlus()` unlocks AI Content Assistant features across both Plus and Pro tiers; `hasPro()` gates Qdrant Vector DB, semantic indexing, and conversational RAG features.
+- Maintained backwards-compatibility aliases (`hasAi()`, `hasVector()`, `hasRag()`, `hasAgency()`).
+- Updated Control Panel subnav, entry sidebar badge, upgrade banners, dashboard tables, and settings labels.
+- Synchronized all documentation, configuration comments, and unit tests (25/25 passing).
+
 ## [1.0.3] - 2026-10-10
 
 ### Fixed

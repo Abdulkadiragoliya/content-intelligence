@@ -11,7 +11,7 @@ use abdulkadiragoliya\contentintelligence\records\AuditResultRecord;
 
 /**
  * Service orchestrating RAG (Retrieval-Augmented Generation) & Content Recommendations
- * for Content Intelligence Plus Edition.
+ * for Content Intelligence Pro Edition.
  */
 class RagService extends Component
 {
@@ -21,7 +21,7 @@ class RagService extends Component
     public function isAvailable(): bool
     {
         $plugin = Plugin::getInstance();
-        return $plugin->hasPlus() && $plugin->ai->isConfigured();
+        return $plugin->hasPro() && $plugin->ai->isConfigured();
     }
 
     /**
@@ -34,7 +34,7 @@ class RagService extends Component
      */
     public function askWebsite(string $question, int $siteId, array $options = []): array
     {
-        $this->requirePlusEdition();
+        $this->requireProEdition();
 
         $cleanQuestion = trim($question);
         if (empty($cleanQuestion)) {
@@ -223,7 +223,7 @@ class RagService extends Component
      */
     public function getRecommendations(int $entryId, int $siteId, int $limit = 4): array
     {
-        $this->requirePlusEdition();
+        $this->requireProEdition();
 
         $entry = Entry::find()->id($entryId)->siteId($siteId)->status(null)->one();
         if (!$entry) {
@@ -270,20 +270,28 @@ class RagService extends Component
     }
 
     /**
-     * Enforce Plus edition requirement.
+     * Enforce Pro edition requirement.
      */
-    protected function requirePlusEdition(): void
+    protected function requireProEdition(): void
     {
-        if (!Plugin::getInstance()->hasPlus()) {
-            throw new \RuntimeException('Ask Your Website RAG requires Content Intelligence Plus edition.');
+        if (!Plugin::getInstance()->hasPro()) {
+            throw new \RuntimeException('Ask Your Website RAG requires Content Intelligence Pro edition.');
         }
     }
 
     /**
-     * Compatibility alias for requirePlusEdition.
+     * Compatibility alias.
+     */
+    protected function requirePlusEdition(): void
+    {
+        $this->requireProEdition();
+    }
+
+    /**
+     * Compatibility alias for requireProEdition.
      */
     protected function requireAgencyEdition(): void
     {
-        $this->requirePlusEdition();
+        $this->requireProEdition();
     }
 }

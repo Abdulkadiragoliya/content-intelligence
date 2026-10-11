@@ -77,13 +77,31 @@
                     </tr>
                     <tr>
                         <td><strong>{{ "SEO Intelligence"|t('content-intelligence') }}</strong></td>
-                        <td>Lite, Pro, Plus</td>
+                        <td>Lite, Plus, Pro</td>
                         <td><span class="ci-severity-badge ci-severity-good">{{ "Active"|t('content-intelligence') }}</span></td>
                         <td><a href="{{ cpUrl('content-intelligence/seo') }}">{{ "Inspect SEO"|t('content-intelligence') }} &rarr;</a></td>
                     </tr>
                     <tr>
                         <td><strong>{{ "AI Content Assistant"|t('content-intelligence') }}</strong></td>
-                        <td>Pro, Plus</td>
+                        <td>Plus, Pro</td>
+                        <td>
+                            {% if hasPlus or hasPro %}
+                                <span class="ci-severity-badge ci-severity-good">{{ "Enabled"|t('content-intelligence') }}</span>
+                            {% else %}
+                                <span class="ci-severity-badge ci-severity-notice">{{ "Requires Plus"|t('content-intelligence') }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if hasPlus or hasPro %}
+                                <a href="{{ cpUrl('content-intelligence/ai') }}">{{ "Open Assistant"|t('content-intelligence') }} &rarr;</a>
+                            {% else %}
+                                <a href="https://plugins.craftcms.com" target="_blank" rel="noopener">{{ "Learn More"|t('content-intelligence') }} &rarr;</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>{{ "Semantic Search & Vector Store"|t('content-intelligence') }}</strong></td>
+                        <td>Pro</td>
                         <td>
                             {% if hasPro %}
                                 <span class="ci-severity-badge ci-severity-good">{{ "Enabled"|t('content-intelligence') }}</span>
@@ -93,24 +111,6 @@
                         </td>
                         <td>
                             {% if hasPro %}
-                                <a href="{{ cpUrl('content-intelligence/ai') }}">{{ "Open Assistant"|t('content-intelligence') }} &rarr;</a>
-                            {% else %}
-                                <a href="https://plugins.craftcms.com" target="_blank" rel="noopener">{{ "Learn More"|t('content-intelligence') }} &rarr;</a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><strong>{{ "Semantic Search & Vector Store"|t('content-intelligence') }}</strong></td>
-                        <td>Plus</td>
-                        <td>
-                            {% if hasPlus ?? hasAgency %}
-                                <span class="ci-severity-badge ci-severity-good">{{ "Enabled"|t('content-intelligence') }}</span>
-                            {% else %}
-                                <span class="ci-severity-badge ci-severity-notice">{{ "Requires Plus"|t('content-intelligence') }}</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if hasPlus ?? hasAgency %}
                                 <a href="{{ cpUrl('content-intelligence/semantic') }}">{{ "Open Vector Index"|t('content-intelligence') }} &rarr;</a>
                             {% else %}
                                 <a href="https://plugins.craftcms.com" target="_blank" rel="noopener">{{ "Learn More"|t('content-intelligence') }} &rarr;</a>
@@ -119,16 +119,16 @@
                     </tr>
                     <tr>
                         <td><strong>{{ "Ask Your Website (RAG)"|t('content-intelligence') }}</strong></td>
-                        <td>Plus</td>
+                        <td>Pro</td>
                         <td>
-                            {% if hasPlus ?? hasAgency %}
+                            {% if hasPro %}
                                 <span class="ci-severity-badge ci-severity-good">{{ "Enabled"|t('content-intelligence') }}</span>
                             {% else %}
-                                <span class="ci-severity-badge ci-severity-notice">{{ "Requires Plus"|t('content-intelligence') }}</span>
+                                <span class="ci-severity-badge ci-severity-notice">{{ "Requires Pro"|t('content-intelligence') }}</span>
                             {% endif %}
                         </td>
                         <td>
-                            {% if hasPlus ?? hasAgency %}
+                            {% if hasPro %}
                                 <a href="{{ cpUrl('content-intelligence/rag') }}">{{ "Query Knowledge Base"|t('content-intelligence') }} &rarr;</a>
                             {% else %}
                                 <a href="https://plugins.craftcms.com" target="_blank" rel="noopener">{{ "Learn More"|t('content-intelligence') }} &rarr;</a>

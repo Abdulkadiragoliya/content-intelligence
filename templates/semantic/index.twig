@@ -4,7 +4,7 @@
 {% set selectedSubnavItem = 'semantic' %}
 
 {% block pageActions %}
-    {% if hasPlus ?? hasAgency %}
+    {% if hasPro %}
         <div style="display: flex; gap: 0.5rem; align-items: center;">
             <form method="post" action="{{ cpUrl('content-intelligence/semantic/prune') }}" style="display: inline-block;">
                 {{ csrfInput() }}
@@ -30,15 +30,15 @@
 {% endblock %}
 
 {% block ciContent %}
-    {% if not (hasPlus ?? hasAgency) %}
+    {% if not hasPro %}
         <div class="ci-upgrade-banner">
-            <h3>{{ "Upgrade to Plus for Semantic Knowledge Base & Vector Search"|t('content-intelligence') }}</h3>
+            <h3>{{ "Upgrade to Pro for Semantic Knowledge Base & Vector Search"|t('content-intelligence') }}</h3>
             <p>
                 {{ "Semantic Search transforms your Craft CMS content into high-dimensional vector embeddings with heading-aware intelligent chunking and hash-based incremental indexing. Unlocks deep content similarity, related content discovery, and AI retrieval (RAG)."|t('content-intelligence') }}
             </p>
             <p style="margin-top: 1rem;">
                 <a href="https://plugins.craftcms.com" target="_blank" rel="noopener" class="btn submit">
-                    {{ "Upgrade to Plus Edition"|t('content-intelligence') }}
+                    {{ "Upgrade to Pro Edition"|t('content-intelligence') }}
                 </a>
             </p>
         </div>
@@ -248,11 +248,11 @@
     </div>
 
     {% js %}
-        var hasPlus = {{ (hasPlus ?? hasAgency) ? 'true' : 'false' }};
+        var hasPro = {{ hasPro ? 'true' : 'false' }};
 
         function executeHybridSearch() {
-            if (!hasPlus) {
-                Craft.cp.displayNotice('{{ "Semantic Search & Embeddings require Content Intelligence Plus edition. Please upgrade your license to unlock."|t("content-intelligence")|e("js") }}');
+            if (!hasPro) {
+                Craft.cp.displayNotice('{{ "Semantic Search & Embeddings require Content Intelligence Pro edition. Please upgrade your license to unlock."|t("content-intelligence")|e("js") }}');
                 return;
             }
 

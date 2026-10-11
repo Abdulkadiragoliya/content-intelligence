@@ -84,6 +84,7 @@ class SeoController extends Controller
             'serp' => $serpPreview,
             'edition' => $plugin->getActiveEdition(),
             'currentSite' => $site,
+            'hasPlus' => $plugin->hasPlus(),
             'hasPro' => $plugin->hasPro(),
             'aiHealth' => $plugin->ai->getHealthStatus(),
         ]);
@@ -97,10 +98,10 @@ class SeoController extends Controller
         $this->requirePostRequest();
         $this->requirePermission('contentIntelligence:useAi');
 
-        if (!Plugin::getInstance()->hasPro()) {
+        if (!Plugin::getInstance()->hasPlus()) {
             return $this->asJson([
                 'success' => false,
-                'message' => Craft::t('content-intelligence', 'AI SEO Analysis requires Content Intelligence Pro or Plus edition. Please upgrade your license to unlock.'),
+                'message' => Craft::t('content-intelligence', 'AI SEO Analysis requires Content Intelligence Plus or Pro edition. Please upgrade your license to unlock.'),
                 'upgradeRequired' => true,
             ]);
         }
