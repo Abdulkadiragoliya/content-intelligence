@@ -26,6 +26,7 @@ use abdulkadiragoliya\contentintelligence\models\Settings;
 use abdulkadiragoliya\contentintelligence\services\AuditService;
 use abdulkadiragoliya\contentintelligence\services\ScoreService;
 use abdulkadiragoliya\contentintelligence\services\SeoService;
+use abdulkadiragoliya\contentintelligence\services\SeoMetadataService;
 use abdulkadiragoliya\contentintelligence\services\AiService;
 use abdulkadiragoliya\contentintelligence\services\VectorService;
 use abdulkadiragoliya\contentintelligence\services\RagService;
@@ -40,6 +41,7 @@ use craft\web\twig\variables\CraftVariable;
  * @property AuditService $audit
  * @property ScoreService $score
  * @property SeoService $seo
+ * @property SeoMetadataService $seoMetadata
  * @property AiService $ai
  * @property VectorService $vector
  * @property RagService $rag
@@ -51,7 +53,7 @@ class Plugin extends BasePlugin
     public const EDITION_PRO = 'pro';
     public const EDITION_AGENCY = 'pro'; // Compatibility alias for top edition (Pro)
 
-    public string $schemaVersion = '1.0.0';
+    public string $schemaVersion = '1.1.0';
     public bool $hasCpSection = true;
     public bool $hasCpSettings = true;
 
@@ -95,6 +97,11 @@ class Plugin extends BasePlugin
      */
     public function isDevOrLocal(): bool
     {
+        // 0. Craft Cloud is strictly a production cloud environment
+        if (App::env('CRAFT_CLOUD') || defined('CRAFT_CLOUD')) {
+            return false;
+        }
+
         // 1. Explicit devMode
         if (Craft::$app->getConfig()->getGeneral()->devMode) {
             return true;
@@ -289,6 +296,7 @@ class Plugin extends BasePlugin
             'audit' => AuditService::class,
             'score' => ScoreService::class,
             'seo' => SeoService::class,
+            'seoMetadata' => SeoMetadataService::class,
             'ai' => AiService::class,
             'vector' => VectorService::class,
             'rag' => RagService::class,
@@ -385,6 +393,8 @@ class Plugin extends BasePlugin
                 $event->rules['content-intelligence/seo/run'] = 'content-intelligence/seo/run';
                 $event->rules['content-intelligence/seo/<entryId:\d+>'] = 'content-intelligence/seo/view';
                 $event->rules['content-intelligence/seo/analyze-ai'] = 'content-intelligence/seo/analyze-ai-seo';
+                $event->rules['content-intelligence/seo/get-metadata'] = 'content-intelligence/seo/get-metadata';
+                $event->rules['content-intelligence/seo/save-metadata'] = 'content-intelligence/seo/save-metadata';
                 $event->rules['content-intelligence/ai'] = 'content-intelligence/ai/index';
                 $event->rules['content-intelligence/ai/modal/<entryId:\d+>'] = 'content-intelligence/ai/sidebar-modal';
                 $event->rules['content-intelligence/ai/test-connection'] = 'content-intelligence/ai/test-connection';
@@ -455,6 +465,7 @@ class Plugin extends BasePlugin
                 if ($entry && $entry->id) {
                     \abdulkadiragoliya\contentintelligence\records\AuditRecord::deleteAll(['entryId' => $entry->id]);
                     \abdulkadiragoliya\contentintelligence\records\EmbeddingRecord::deleteAll(['entryId' => $entry->id]);
+                    \abdulkadiragoliya\contentintelligence\records\SeoMetadataRecord::deleteAll(['elementId' => $entry->id]);
                 }
             }
         );

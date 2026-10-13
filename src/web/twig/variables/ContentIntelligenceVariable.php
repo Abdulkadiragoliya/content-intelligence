@@ -4,6 +4,8 @@ namespace abdulkadiragoliya\contentintelligence\web\twig\variables;
 
 use Craft;
 use craft\elements\Entry;
+use craft\helpers\Template;
+use Twig\Markup;
 use abdulkadiragoliya\contentintelligence\Plugin;
 use abdulkadiragoliya\contentintelligence\records\AuditRecord;
 
@@ -151,5 +153,64 @@ class ContentIntelligenceVariable
             'audit' => $auditStats,
             'semantic' => $vectorStats,
         ];
+    }
+
+    /**
+     * Renders standalone HTML SEO <title> and <meta name="description"> tags for the website.
+     *
+     * Example Twig usage:
+     *   {{ craft.contentIntelligence.renderSeoMeta(entry) }}
+     *   {{ craft.contentIntelligence.renderSeoMeta() }}
+     *
+     * @param mixed $element Element, element ID, or null (defaults to matched element)
+     * @param int|null $siteId Site ID or null (defaults to current site)
+     * @param array $options Optional configuration ('fallbackTitle', 'fallbackDescription', 'siteSuffix', 'force')
+     * @return string
+     */
+    public function renderSeoMeta(mixed $element = null, ?int $siteId = null, array $options = []): Markup
+    {
+        $html = Plugin::getInstance()->seoMetadata->renderHtml($element, $siteId, $options);
+        return Template::raw($html);
+    }
+
+    /**
+     * Resolves structured SEO metadata array for an element and site.
+     *
+     * Example Twig usage:
+     *   {% set seo = craft.contentIntelligence.getSeo(entry) %}
+     *   <title>{{ seo.renderedTitle }}</title>
+     *
+     * @param mixed $element
+     * @param int|null $siteId
+     * @param array $options
+     * @return array
+     */
+    public function getSeo(mixed $element = null, ?int $siteId = null, array $options = []): array
+    {
+        return Plugin::getInstance()->seoMetadata->resolveMetadata($element, $siteId, $options);
+    }
+
+    /**
+     * Returns the raw persistent SeoMetadataRecord for an element.
+     *
+     * @param mixed $element ElementInterface, element ID, or null
+     * @param int|null $siteId
+     * @return \abdulkadiragoliya\contentintelligence\records\SeoMetadataRecord|null
+     */
+    public function getMetadata(mixed $element = null, ?int $siteId = null): ?\abdulkadiragoliya\contentintelligence\records\SeoMetadataRecord
+    {
+        if ($element === null) {
+            return null;
+        }
+
+        $elementId = $element instanceof \craft\base\ElementInterface
+            ? (int)($element->canonicalId ?: $element->id)
+            : (int)$element;
+
+        if (!$elementId) {
+            return null;
+        }
+
+        return Plugin::getInstance()->seoMetadata->getMetadata($elementId, $siteId);
     }
 }

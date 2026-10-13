@@ -31,8 +31,8 @@ class AiController extends Controller
             return false;
         }
 
-        // Allow viewing index workspace (which shows upgrade banner) and connection testing
-        if (in_array($action->id, ['index', 'test-connection'], true)) {
+        // Allow viewing index workspace (which shows upgrade banner), connection testing, and sidebar modal
+        if (in_array($action->id, ['index', 'test-connection', 'sidebar-modal'], true)) {
             return true;
         }
 
@@ -55,7 +55,7 @@ class AiController extends Controller
      */
     public function actionIndex(): Response
     {
-        $this->requirePermission('contentIntelligence:useAi');
+        $this->requirePermission('contentIntelligence:viewDashboard');
 
         $plugin = Plugin::getInstance();
         $request = Craft::$app->getRequest();
@@ -109,10 +109,14 @@ class AiController extends Controller
      */
     public function actionSidebarModal(?int $entryId = null): Response
     {
-        $this->requirePermission('contentIntelligence:useAi');
+        $user = Craft::$app->getUser();
+        if ($user->getIsGuest()) {
+            throw new ForbiddenHttpException('Login required.');
+        }
 
         $entryId = $entryId ?? (int)$this->request->getParam('entryId');
         $siteId = (int)$this->request->getParam('siteId') ?: Craft::$app->getSites()->getCurrentSite()->id;
+        $tab = (string)$this->request->getParam('tab', 'meta');
         $entry = $this->findEntry($entryId, $siteId);
         if (!$entry) {
             throw new NotFoundHttpException("Entry #{$entryId} not found");
@@ -129,6 +133,7 @@ class AiController extends Controller
             'hasPro' => $plugin->hasPro(),
             'aiHealth' => $aiHealth,
             'siteId' => $siteId,
+            'initialTab' => $tab,
         ]);
     }
 
@@ -175,14 +180,27 @@ class AiController extends Controller
                 ]);
             }
 
+            $target = (string)$request->getBodyParam('target', 'both');
+
             $ai = Plugin::getInstance()->ai;
-            $titlesResult = $ai->generateMetaTitles($title, $content);
-            $descsResult = $ai->generateMetaDescriptions($title, $content);
+            $titles = [];
+            $descriptions = [];
+
+            if ($target === 'both' || $target === 'title') {
+                $titlesResult = $ai->generateMetaTitles($title, $content);
+                $titles = $titlesResult['suggestions'] ?? [];
+            }
+
+            if ($target === 'both' || $target === 'description') {
+                $descsResult = $ai->generateMetaDescriptions($title, $content);
+                $descriptions = $descsResult['suggestions'] ?? [];
+            }
 
             return $this->asJson([
                 'success' => true,
-                'titles' => $titlesResult['suggestions'] ?? [],
-                'descriptions' => $descsResult['suggestions'] ?? [],
+                'target' => $target,
+                'titles' => $titles,
+                'descriptions' => $descriptions,
             ]);
         } catch (\Throwable $e) {
             Craft::error("AI Generate Meta Error: {$e->getMessage()}", __METHOD__);

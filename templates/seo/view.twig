@@ -10,6 +10,9 @@
     <a href="{{ entry.cpEditUrl }}" target="_blank" rel="noopener" class="btn">
         {{ "Edit in Craft"|t('content-intelligence') }} &nearr;
     </a>
+    <button type="button" class="btn ci-open-ai-slideout" data-entry-id="{{ entry.id }}" data-site-id="{{ entry.siteId }}" data-tab="meta" style="background: #4f46e5; border-color: #4f46e5; color: #fff;">
+        {{ "Manage SEO Metadata"|t('content-intelligence') }}
+    </button>
     <form method="post" action="{{ cpUrl('content-intelligence/audit/audit-entry/' ~ entry.id) }}" style="display: inline-block;">
         {{ csrfInput() }}
         {{ actionInput('content-intelligence/audit/audit-entry') }}
@@ -328,6 +331,36 @@
                     Craft.cp.displayNotice('AI SEO Intelligence audit complete.');
                 } else {
                     Craft.cp.displayError(response.message || 'Error executing AI SEO audit.');
+                }
+            });
+        });
+
+        $(document).off('click.ci_seo_slideout').on('click.ci_seo_slideout', '.ci-open-ai-slideout', function(e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var entryId = $btn.data('entry-id');
+            var siteId = $btn.data('site-id');
+            var slideoutUrl = Craft.getUrl('content-intelligence/ai/modal/' + entryId, { siteId: siteId, tab: 'meta' });
+            $btn.addClass('loading');
+
+            $.ajax({
+                url: slideoutUrl,
+                type: 'GET',
+                dataType: 'html',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function(html) {
+                    $btn.removeClass('loading');
+                    var slideout = new Craft.Slideout(html, {
+                        containerAttributes: {
+                            class: 'ci-slideout-container',
+                            style: 'width: 860px; max-width: 95vw; overflow-y: auto !important;'
+                        }
+                    });
+                    Craft.initUiElements(slideout.$container);
+                },
+                error: function() {
+                    $btn.removeClass('loading');
+                    Craft.cp.displayError(Craft.t('content-intelligence', 'Failed to load SEO metadata slideout.'));
                 }
             });
         });

@@ -1,4 +1,24 @@
-<div class="ci-slideout-wrapper" style="padding: 1.5rem; max-width: 900px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+{% set currentEntry = entry ?? element ?? null %}
+{% set lookupId = currentEntry ? (currentEntry.canonicalId ?: currentEntry.id) : null %}
+{% set currentMeta = lookupId ? craft.contentIntelligence.getMetadata(lookupId, siteId ?? currentEntry.siteId) : null %}
+{% set savedTitle = currentMeta ? currentMeta.seoTitle : '' %}
+{% set savedDescription = currentMeta ? currentMeta.metaDescription : '' %}
+{% set isAiGenerated = currentMeta ? currentMeta.isAiGenerated : false %}
+
+<style>
+.ci-slideout-container,
+.ci-slideout-container.slideout {
+    overflow-y: auto !important;
+    max-height: 100vh !important;
+}
+.ci-slideout-wrapper {
+    overflow-y: auto !important;
+    max-height: calc(100vh - 48px);
+    box-sizing: border-box;
+}
+</style>
+
+<div class="ci-slideout-wrapper" style="padding: 1.5rem 1.5rem 4rem 1.5rem; max-width: 900px; height: 100%; max-height: calc(100vh - 48px); overflow-y: auto; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
     <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 1rem; border-bottom: 1px solid #e2e8f0; margin-bottom: 1.25rem;">
         <div>
             <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -25,51 +45,182 @@
     {% endif %}
 
     <!-- Tabs Navigation -->
+    {% set currentTab = initialTab ?? 'meta' %}
     <div class="ci-tabs-nav" style="display: flex; gap: 0.5rem; border-bottom: 1px solid #e2e8f0; margin-bottom: 1.25rem;">
-        <button type="button" class="ci-tab-btn active" data-tab="meta" style="padding: 0.5rem 1rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid #6366f1; color: #4338ca; cursor: pointer;">
+        <button type="button" class="ci-tab-btn {{ currentTab == 'meta' ? 'active' : '' }}" data-tab="meta" style="padding: 0.5rem 1rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid {{ currentTab == 'meta' ? '#6366f1' : 'transparent' }}; color: {{ currentTab == 'meta' ? '#4338ca' : '#64748b' }}; cursor: pointer;">
             {{ "SEO Meta Tags"|t('content-intelligence') }}
         </button>
-        <button type="button" class="ci-tab-btn" data-tab="improve" style="padding: 0.5rem 1rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid transparent; color: #64748b; cursor: pointer;">
+        <button type="button" class="ci-tab-btn {{ currentTab == 'improve' ? 'active' : '' }}" data-tab="improve" style="padding: 0.5rem 1rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid {{ currentTab == 'improve' ? '#6366f1' : 'transparent' }}; color: {{ currentTab == 'improve' ? '#4338ca' : '#64748b' }}; cursor: pointer;">
             {{ "Improve Content (Diff)"|t('content-intelligence') }}
         </button>
-        <button type="button" class="ci-tab-btn" data-tab="faqs" style="padding: 0.5rem 1rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid transparent; color: #64748b; cursor: pointer;">
+        <button type="button" class="ci-tab-btn {{ currentTab == 'faqs' ? 'active' : '' }}" data-tab="faqs" style="padding: 0.5rem 1rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid {{ currentTab == 'faqs' ? '#6366f1' : 'transparent' }}; color: {{ currentTab == 'faqs' ? '#4338ca' : '#64748b' }}; cursor: pointer;">
             {{ "FAQ Generator"|t('content-intelligence') }}
         </button>
-        <button type="button" class="ci-tab-btn" data-tab="summary" style="padding: 0.5rem 1rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid transparent; color: #64748b; cursor: pointer;">
+        <button type="button" class="ci-tab-btn {{ currentTab == 'summary' ? 'active' : '' }}" data-tab="summary" style="padding: 0.5rem 1rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid {{ currentTab == 'summary' ? '#6366f1' : 'transparent' }}; color: {{ currentTab == 'summary' ? '#4338ca' : '#64748b' }}; cursor: pointer;">
             {{ "Executive Summary"|t('content-intelligence') }}
         </button>
-        <button type="button" class="ci-tab-btn" data-tab="alt" style="padding: 0.5rem 1rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid transparent; color: #64748b; cursor: pointer;">
+        <button type="button" class="ci-tab-btn {{ currentTab == 'alt' ? 'active' : '' }}" data-tab="alt" style="padding: 0.5rem 1rem; font-size: 13px; font-weight: 600; border: none; background: none; border-bottom: 2px solid {{ currentTab == 'alt' ? '#6366f1' : 'transparent' }}; color: {{ currentTab == 'alt' ? '#4338ca' : '#64748b' }}; cursor: pointer;">
             {{ "Image Alt Text"|t('content-intelligence') }}
         </button>
     </div>
 
     <!-- Hidden State -->
-    <input type="hidden" id="ci-slideout-entry-id" value="{{ entry.id }}">
-    <input type="hidden" id="ci-slideout-site-id" value="{{ siteId ?? entry.siteId }}">
-    <input type="hidden" id="ci-slideout-entry-title" value="{{ entry.title }}">
+    <input type="hidden" id="ci-slideout-entry-id" value="{{ currentEntry.id }}">
+    <input type="hidden" id="ci-slideout-site-id" value="{{ siteId ?? currentEntry.siteId }}">
+    <input type="hidden" id="ci-slideout-entry-title" value="{{ currentEntry.title }}">
     <div id="ci-slideout-entry-body" style="display: none;">{{ entryContent.body }}</div>
 
     <!-- TAB 1: SEO META TAGS -->
-    <div class="ci-tab-pane" id="ci-pane-meta">
-        <p style="font-size: 13px; color: #64748b; margin-bottom: 1rem;">
-            {{ "Generate search-optimized, high-CTR meta titles and descriptions grounded directly in this entry's content."|t('content-intelligence') }}
-        </p>
-        <button type="button" id="ci-btn-gen-meta" class="btn submit" style="margin-bottom: 1.25rem;">
-            {{ "Generate Meta Suggestions"|t('content-intelligence') }}
-        </button>
-        <span id="ci-meta-spinner" class="spinner hidden"></span>
+    <div class="ci-tab-pane" id="ci-pane-meta" style="{{ currentTab == 'meta' ? '' : 'display: none;' }}">
+        <!-- Standalone SEO Status Banner -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 0.25rem 0;">
+                        {{ "Standalone SEO Metadata Management"|t('content-intelligence') }}
+                    </h3>
+                    <p style="font-size: 12px; color: #64748b; margin: 0;">
+                        {{ "Saves directly into Content Intelligence storage for this site. Does NOT overwrite your Craft entry title (H1) or body copy."|t('content-intelligence') }}
+                    </p>
+                </div>
+                <div id="ci-meta-save-status">
+                    {% if savedTitle or savedDescription %}
+                        <span class="ci-badge" style="font-size: 11px; padding: 3px 8px; border-radius: 9999px; background: #dcfce7; color: #166534; font-weight: 600;">
+                            ✓ {{ "Saved in Database"|t('content-intelligence') }}
+                        </span>
+                    {% else %}
+                        <span class="ci-badge" style="font-size: 11px; padding: 3px 8px; border-radius: 9999px; background: #f1f5f9; color: #64748b; font-weight: 600;">
+                            {{ "Using Entry Fallbacks"|t('content-intelligence') }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 
-        <div id="ci-meta-results" style="display: none;">
-            <h4 style="font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 0.5rem;">{{ "Suggested Meta Titles (Target: 30–60 chars)"|t('content-intelligence') }}</h4>
-            <div id="ci-title-suggestions" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem;"></div>
+        <!-- Editable Metadata Fields -->
+        <div style="display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 1.5rem;">
+            <!-- Field 1: SEO Title -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                    <label for="ci-seo-title-field" style="font-size: 13px; font-weight: 600; color: #0f172a;">
+                        {{ "SEO Title (renders <title>)"|t('content-intelligence') }}
+                    </label>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span id="ci-title-counter" style="font-size: 12px; font-weight: 600; color: #64748b;">
+                            {{ savedTitle|length }} / 60
+                        </span>
+                        <span id="ci-title-pill" style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 9999px;"></span>
+                    </div>
+                </div>
+                <input type="text" id="ci-seo-title-field" class="text fullwidth" value="{{ savedTitle }}" placeholder="{{ entry.title }}" style="font-size: 14px; padding: 0.5rem;">
+                <p style="font-size: 11px; color: #64748b; margin: 0.35rem 0 0 0;">
+                    {{ "Advisory length: 30–60 characters. Search engines will construct title tags from this field."|t('content-intelligence') }}
+                </p>
+            </div>
 
-            <h4 style="font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 0.5rem;">{{ "Suggested Meta Descriptions (Target: 120–160 chars)"|t('content-intelligence') }}</h4>
-            <div id="ci-desc-suggestions" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem;"></div>
+            <!-- Field 2: Meta Description -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                    <label for="ci-seo-desc-field" style="font-size: 13px; font-weight: 600; color: #0f172a;">
+                        {{ "SEO Meta Description (renders <meta name=\"description\">)"|t('content-intelligence') }}
+                    </label>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span id="ci-desc-counter" style="font-size: 12px; font-weight: 600; color: #64748b;">
+                            {{ savedDescription|length }} / 160
+                        </span>
+                        <span id="ci-desc-pill" style="font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 9999px;"></span>
+                    </div>
+                </div>
+                <textarea id="ci-seo-desc-field" class="text fullwidth" rows="3" placeholder="{{ "Enter concise meta description for search engine result snippets..."|t('content-intelligence') }}" style="font-size: 13px; padding: 0.5rem; line-height: 1.5;">{{ savedDescription }}</textarea>
+                <p style="font-size: 11px; color: #64748b; margin: 0.35rem 0 0 0;">
+                    {{ "Advisory length: 120–160 characters. Grounded description of the page purpose with a clear call-to-action."|t('content-intelligence') }}
+                </p>
+            </div>
+
+            <!-- Metadata Actions Bar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.75rem 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <button type="button" id="ci-btn-save-seo-meta" class="btn submit" style="display: flex; align-items: center; gap: 0.4rem; background: #16a34a; border-color: #16a34a; color: #fff;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        <span>{{ "Save Approved SEO Metadata"|t('content-intelligence') }}</span>
+                    </button>
+                    <span id="ci-save-meta-spinner" class="spinner hidden"></span>
+                    <button type="button" id="ci-btn-restore-seo-meta" class="btn" data-saved-title="{{ savedTitle|e('html_attr') }}" data-saved-desc="{{ savedDescription|e('html_attr') }}">
+                        {{ "Restore Saved"|t('content-intelligence') }}
+                    </button>
+                </div>
+                <div>
+                    <button type="button" id="ci-btn-clear-seo-meta" class="btn small" style="color: #dc2626;">
+                        {{ "Clear Fields"|t('content-intelligence') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Generation Section -->
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 1.25rem;">
+            {% if hasPlus or hasPro %}
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <div>
+                        <h4 style="font-size: 13px; font-weight: 700; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 0.35rem;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"></path>
+                            </svg>
+                            <span>{{ "AI SEO Metadata Generator"|t('content-intelligence') }}</span>
+                        </h4>
+                        <p style="font-size: 12px; color: #64748b; margin: 0.2rem 0 0 0;">
+                            {{ "Generate suggestions based on page content. Preview suggestions below, then click Apply to load them into the fields above."|t('content-intelligence') }}
+                        </p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                        <button type="button" id="ci-btn-gen-meta" class="btn submit" data-target="both" style="display: flex; align-items: center; gap: 0.35rem; font-weight: 600;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"></path>
+                            </svg>
+                            <span>{{ "Generate Meta Suggestions"|t('content-intelligence') }}</span>
+                        </button>
+                        <button type="button" id="ci-btn-gen-title-only" class="btn small" data-target="title">
+                            {{ "Title Only"|t('content-intelligence') }}
+                        </button>
+                        <button type="button" id="ci-btn-gen-desc-only" class="btn small" data-target="description">
+                            {{ "Description Only"|t('content-intelligence') }}
+                        </button>
+                        <span id="ci-meta-spinner" class="spinner hidden"></span>
+                    </div>
+                </div>
+
+                <div id="ci-meta-results" style="display: none; margin-top: 1rem;">
+                    <div id="ci-title-suggestions-container" style="margin-bottom: 1.25rem;">
+                        <h5 style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 0.5rem; text-transform: uppercase;">
+                            {{ "Suggested SEO Titles (Target: 30–60 chars)"|t('content-intelligence') }}
+                        </h5>
+                        <div id="ci-title-suggestions" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                    </div>
+
+                    <div id="ci-desc-suggestions-container">
+                        <h5 style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 0.5rem; text-transform: uppercase;">
+                            {{ "Suggested Meta Descriptions (Target: 120–160 chars)"|t('content-intelligence') }}
+                        </h5>
+                        <div id="ci-desc-suggestions" style="display: flex; flex-direction: column; gap: 0.5rem;"></div>
+                    </div>
+                </div>
+            {% else %}
+                <div style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                    <strong style="font-size: 13px; color: #1e293b;">{{ "AI Generation Available in Pro & Plus"|t('content-intelligence') }}</strong>
+                    <p style="font-size: 12px; color: #64748b; margin: 0.25rem 0 0 0;">
+                        {{ "Manual entry, editing, and frontend <title> and <meta> tag rendering are 100% active and free in Lite edition. Upgrade to Pro to unlock automated AI title and description generation."|t('content-intelligence') }}
+                    </p>
+                </div>
+            {% endif %}
         </div>
     </div>
 
     <!-- TAB 2: IMPROVE CONTENT (DIFF VIEW) -->
-    <div class="ci-tab-pane" id="ci-pane-improve" style="display: none;">
+    <div class="ci-tab-pane" id="ci-pane-improve" style="{{ currentTab == 'improve' ? '' : 'display: none;' }}">
         <p style="font-size: 13px; color: #64748b; margin-bottom: 1rem;">
             {{ "Polish readability, flow, and conciseness while preserving all facts. Review the diff before applying."|t('content-intelligence') }}
         </p>
@@ -133,7 +284,7 @@
     </div>
 
     <!-- TAB 3: FAQ GENERATOR -->
-    <div class="ci-tab-pane" id="ci-pane-faqs" style="display: none;">
+    <div class="ci-tab-pane" id="ci-pane-faqs" style="{{ currentTab == 'faqs' ? '' : 'display: none;' }}">
         <p style="font-size: 13px; color: #64748b; margin-bottom: 1rem;">
             {{ "Extract reader questions and factual answers grounded strictly in the entry's content."|t('content-intelligence') }}
         </p>
@@ -152,7 +303,7 @@
     </div>
 
     <!-- TAB 4: EXECUTIVE SUMMARY -->
-    <div class="ci-tab-pane" id="ci-pane-summary" style="display: none;">
+    <div class="ci-tab-pane" id="ci-pane-summary" style="{{ currentTab == 'summary' ? '' : 'display: none;' }}">
         <p style="font-size: 13px; color: #64748b; margin-bottom: 1rem;">
             {{ "Generate high-level executive summaries, key takeaways, and social teasers."|t('content-intelligence') }}
         </p>
@@ -189,7 +340,7 @@
     </div>
 
     <!-- TAB 5: IMAGE ALT TEXT -->
-    <div class="ci-tab-pane" id="ci-pane-alt" style="display: none;">
+    <div class="ci-tab-pane" id="ci-pane-alt" style="{{ currentTab == 'alt' ? '' : 'display: none;' }}">
         <p style="font-size: 13px; color: #64748b; margin-bottom: 1rem;">
             {{ "Generate descriptive, accessible alt text for images referenced in this entry."|t('content-intelligence') }}
         </p>
@@ -233,19 +384,20 @@
 
 <script>
 (function() {
-    var entryId = $('#ci-slideout-entry-id').val();
-    var siteId = $('#ci-slideout-site-id').val();
-    var entryTitle = $('#ci-slideout-entry-title').val();
-    var entryBody = $('#ci-slideout-entry-body').text();
+    var $wrapper = $('.ci-slideout-wrapper').last();
+    var entryId = $wrapper.find('#ci-slideout-entry-id').val();
+    var siteId = $wrapper.find('#ci-slideout-site-id').val();
+    var entryTitle = $wrapper.find('#ci-slideout-entry-title').val();
+    var entryBody = $wrapper.find('#ci-slideout-entry-body').text();
     var faqsCache = [];
 
-    // Tabs switching
-    $('.ci-tab-btn').on('click', function() {
+    // Tabs switching scoped strictly to this slideout instance
+    $wrapper.find('.ci-tab-btn').off('click').on('click', function() {
         var tab = $(this).data('tab');
-        $('.ci-tab-btn').css({'border-bottom-color': 'transparent', 'color': '#64748b'});
-        $(this).css({'border-bottom-color': '#6366f1', 'color': '#4338ca'});
-        $('.ci-tab-pane').hide();
-        $('#ci-pane-' + tab).show();
+        $wrapper.find('.ci-tab-btn').css({'border-bottom-color': 'transparent', 'color': '#64748b'}).removeClass('active');
+        $(this).css({'border-bottom-color': '#6366f1', 'color': '#4338ca'}).addClass('active');
+        $wrapper.find('.ci-tab-pane').hide();
+        $wrapper.find('#ci-pane-' + tab).show();
     });
 
     // Universal Copy to Clipboard Helper
@@ -302,124 +454,187 @@
     }
 
     // Copy to clipboard helper
-    $(document).off('click.ci_copy').on('click.ci_copy', '.ci-copy-btn', function(e) {
+    $wrapper.off('click.ci_copy').on('click.ci_copy', '.ci-copy-btn', function(e) {
         e.preventDefault();
         var target = $(this).data('target');
-        var text = $(target).is('input, textarea') ? $(target).val() : $(target).text();
+        var text = $wrapper.find(target).is('input, textarea') ? $wrapper.find(target).val() : $wrapper.find(target).text();
         ciCopyToClipboard(text, $(this));
     });
 
-    // Apply to Page Title (Site-Specific in Entry Editor)
-    $(document).off('click.ci_apply_title').on('click.ci_apply_title', '.ci-apply-title-btn', function(e) {
+    // Live Character Counter & Status Logic for SEO Metadata
+    function updateSeoTitleMeter() {
+        var val = $wrapper.find('#ci-seo-title-field').val() || '';
+        var len = val.length;
+        $wrapper.find('#ci-title-counter').text(len + ' / 60');
+
+        var $pill = $wrapper.find('#ci-title-pill');
+        if (len === 0) {
+            $pill.text('Empty').css({'background': '#f1f5f9', 'color': '#64748b'});
+        } else if (len >= 30 && len <= 60) {
+            $pill.text('Optimal').css({'background': '#dcfce7', 'color': '#166534'});
+        } else if (len < 30) {
+            $pill.text('Too Short').css({'background': '#fef3c7', 'color': '#92400e'});
+        } else {
+            $pill.text('Too Long').css({'background': '#fee2e2', 'color': '#991b1b'});
+        }
+    }
+
+    function updateSeoDescMeter() {
+        var val = $wrapper.find('#ci-seo-desc-field').val() || '';
+        var len = val.length;
+        $wrapper.find('#ci-desc-counter').text(len + ' / 160');
+
+        var $pill = $wrapper.find('#ci-desc-pill');
+        if (len === 0) {
+            $pill.text('Empty').css({'background': '#f1f5f9', 'color': '#64748b'});
+        } else if (len >= 120 && len <= 160) {
+            $pill.text('Optimal').css({'background': '#dcfce7', 'color': '#166534'});
+        } else if (len < 120) {
+            $pill.text('Short').css({'background': '#fef3c7', 'color': '#92400e'});
+        } else {
+            $pill.text('Exceeds Snippet').css({'background': '#fee2e2', 'color': '#991b1b'});
+        }
+    }
+
+    $wrapper.find('#ci-seo-title-field').on('input change', updateSeoTitleMeter);
+    $wrapper.find('#ci-seo-desc-field').on('input change', updateSeoDescMeter);
+    updateSeoTitleMeter();
+    updateSeoDescMeter();
+
+    // Apply Suggestion to SEO Title Field (preserves Craft Entry Title)
+    $wrapper.off('click.ci_apply_title').on('click.ci_apply_title', '.ci-apply-title-btn', function(e) {
         e.preventDefault();
         var title = $(this).data('title');
-        var $parentDoc = $(window.parent.document).length ? $(window.parent.document) : $(document);
-        var $titleField = $parentDoc.find('#title, input[name="title"], #header input[name="title"], input.title').first();
-
-        if ($titleField.length) {
-            $titleField.val(title).trigger('change').trigger('input');
-            $titleField.css('background', '#fef08a').animate({ backgroundColor: '#ffffff' }, 1200);
-            $('#ci-slideout-entry-title').val(title);
-            entryTitle = title;
-            Craft.cp.displayNotice('Title updated in editor for current site. Remember to save entry.');
-        } else {
-            ciCopyToClipboard(title, $(this));
-            Craft.cp.displayNotice('Title copied to clipboard (title field not found in editor)');
-        }
+        $wrapper.find('#ci-seo-title-field').val(title).trigger('input');
+        Craft.cp.displayNotice(Craft.t('content-intelligence', 'Applied to SEO Title. Review and click "Save Approved SEO Metadata".'));
     });
 
-    // Apply to Meta Description (Site-Specific in Entry Editor)
-    $(document).off('click.ci_apply_desc').on('click.ci_apply_desc', '.ci-apply-desc-btn', function(e) {
+    // Apply Suggestion to Meta Description Field
+    $wrapper.off('click.ci_apply_desc').on('click.ci_apply_desc', '.ci-apply-desc-btn', function(e) {
         e.preventDefault();
         var desc = $(this).data('desc');
-        var $parentDoc = $(window.parent.document).length ? $(window.parent.document) : $(document);
-        var $descField = $parentDoc.find('textarea[name*="description"], textarea[name*="metaDescription"], textarea[name*="seoDescription"], input[name*="description"], #fields-metaDescription, #fields-seoDescription, #fields-description').first();
-
-        if ($descField.length) {
-            $descField.val(desc).trigger('change').trigger('input');
-            $descField.css('background', '#fef08a').animate({ backgroundColor: '#ffffff' }, 1200);
-            Craft.cp.displayNotice('Description updated in editor for current site. Remember to save entry.');
-        } else {
-            ciCopyToClipboard(desc, $(this));
-            Craft.cp.displayNotice('Description copied to clipboard.');
-        }
+        $wrapper.find('#ci-seo-desc-field').val(desc).trigger('input');
+        Craft.cp.displayNotice(Craft.t('content-intelligence', 'Applied to Meta Description. Review and click "Save Approved SEO Metadata".'));
     });
 
-    // Apply to Body (Site-Specific in Entry Editor)
-    $('#ci-btn-apply-body').on('click', function(e) {
+    // Save Approved SEO Metadata (Persistent Database Storage)
+    $wrapper.find('#ci-btn-save-seo-meta').off('click').on('click', function(e) {
         e.preventDefault();
-        var improved = $('#ci-improved-text').val();
-        var $parentDoc = $(window.parent.document).length ? $(window.parent.document) : $(document);
-        var $bodyField = $parentDoc.find('textarea[name*="body"], textarea[name*="content"], #fields-body, #fields-content, .redactor-editor, .ck-content').first();
-
-        if ($bodyField.length) {
-            if ($bodyField.hasClass('ck-content') || $bodyField.hasClass('redactor-editor')) {
-                $bodyField.html(improved).trigger('change').trigger('input');
-            } else {
-                $bodyField.val(improved).trigger('change').trigger('input');
-            }
-            $bodyField.css('background', '#fef08a').animate({ backgroundColor: '#ffffff' }, 1200);
-            Craft.cp.displayNotice('Content inserted into field for current site. Review and save entry.');
-        } else {
-            ciCopyToClipboard(improved, $(this));
-            Craft.cp.displayNotice('Improved content copied to clipboard.');
-        }
-    });
-
-    // Generate Meta
-    $('#ci-btn-gen-meta').on('click', function() {
         var $btn = $(this);
-        var $spinner = $('#ci-meta-spinner');
+        var $spinner = $wrapper.find('#ci-save-meta-spinner');
+        var seoTitle = $wrapper.find('#ci-seo-title-field').val();
+        var metaDescription = $wrapper.find('#ci-seo-desc-field').val();
+
         $btn.addClass('disabled');
         $spinner.removeClass('hidden');
 
-        Craft.postActionRequest('content-intelligence/ai/generate-meta', {
-            entryId: entryId,
+        Craft.postActionRequest('content-intelligence/seo/save-metadata', {
+            elementId: entryId,
             siteId: siteId,
-            title: entryTitle,
-            content: entryBody
+            seoTitle: seoTitle,
+            metaDescription: metaDescription,
+            isAiGenerated: $wrapper.find('#ci-meta-results').is(':visible') ? 1 : 0
         }, function(response) {
             $btn.removeClass('disabled');
             $spinner.addClass('hidden');
 
             if (response.success) {
-                var $titles = $('#ci-title-suggestions').empty();
-                response.titles.forEach(function(item) {
-                    var $row = $('<div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.6rem 0.75rem;">' +
-                        '<div><strong>' + item.title + '</strong> <span style="font-size:11px; color:#64748b; margin-left:0.5rem;">(' + item.length + ' chars) - ' + item.rationale + '</span></div>' +
-                        '<div style="display:flex; gap:0.4rem;">' +
-                            '<button type="button" class="btn small ci-apply-title-btn" data-title="' + item.title.replace(/"/g, '&quot;') + '">Apply to Title</button>' +
-                            '<button type="button" class="btn small ci-copy-btn" data-target="#temp-title-' + item.length + '">Copy</button>' +
-                            '<input type="hidden" id="temp-title-' + item.length + '" value="' + item.title.replace(/"/g, '&quot;') + '">' +
-                        '</div>' +
-                    '</div>');
-                    $titles.append($row);
-                });
-
-                var $descs = $('#ci-desc-suggestions').empty();
-                response.descriptions.forEach(function(item, idx) {
-                    var $row = $('<div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.6rem 0.75rem;">' +
-                        '<div style="flex:1; padding-right:1rem;">' + item.description + ' <span style="font-size:11px; color:#64748b;">(' + item.length + ' chars)</span></div>' +
-                        '<div style="display:flex; gap:0.4rem;">' +
-                            '<button type="button" class="btn small ci-apply-desc-btn" data-desc="' + item.description.replace(/"/g, '&quot;') + '">Apply to Description</button>' +
-                            '<button type="button" class="btn small ci-copy-btn" data-target="#temp-desc-' + idx + '">Copy</button>' +
-                            '<input type="hidden" id="temp-desc-' + idx + '" value="' + item.description.replace(/"/g, '&quot;') + '">' +
-                        '</div>' +
-                    '</div>');
-                    $descs.append($row);
-                });
-
-                $('#ci-meta-results').show();
+                Craft.cp.displayNotice(response.message || Craft.t('content-intelligence', 'SEO metadata saved successfully.'));
+                $wrapper.find('#ci-meta-save-status').html('<span class="ci-badge" style="font-size: 11px; padding: 3px 8px; border-radius: 9999px; background: #dcfce7; color: #166534; font-weight: 600;">✓ ' + Craft.t('content-intelligence', 'Saved in Database') + '</span>');
+                $wrapper.find('#ci-btn-restore-seo-meta').data('saved-title', seoTitle).data('saved-desc', metaDescription);
             } else {
-                Craft.cp.displayError(response.message || 'Error generating meta tags');
+                Craft.cp.displayError(response.message || Craft.t('content-intelligence', 'Failed to save SEO metadata.'));
             }
         });
     });
 
+    // Restore Saved SEO Metadata
+    $wrapper.find('#ci-btn-restore-seo-meta').off('click').on('click', function(e) {
+        e.preventDefault();
+        var savedTitle = $(this).data('saved-title') || '';
+        var savedDesc = $(this).data('saved-desc') || '';
+        $wrapper.find('#ci-seo-title-field').val(savedTitle).trigger('input');
+        $wrapper.find('#ci-seo-desc-field').val(savedDesc).trigger('input');
+        Craft.cp.displayNotice(Craft.t('content-intelligence', 'Restored previously saved values.'));
+    });
+
+    // Clear Fields
+    $wrapper.find('#ci-btn-clear-seo-meta').off('click').on('click', function(e) {
+        e.preventDefault();
+        $wrapper.find('#ci-seo-title-field').val('').trigger('input');
+        $wrapper.find('#ci-seo-desc-field').val('').trigger('input');
+    });
+
+    // Run AI Generation (Supports target: both, title, or description)
+    function runMetaGeneration(target) {
+        var $btn = $wrapper.find('#ci-btn-gen-meta');
+        var $spinner = $wrapper.find('#ci-meta-spinner');
+        $wrapper.find('#ci-btn-gen-meta, #ci-btn-gen-title-only, #ci-btn-gen-desc-only').addClass('disabled');
+        $spinner.removeClass('hidden');
+
+        Craft.postActionRequest('content-intelligence/ai/generate-meta', {
+            entryId: entryId,
+            siteId: siteId,
+            title: $wrapper.find('#ci-seo-title-field').val() || entryTitle,
+            content: entryBody,
+            target: target || 'both'
+        }, function(response) {
+            $wrapper.find('#ci-btn-gen-meta, #ci-btn-gen-title-only, #ci-btn-gen-desc-only').removeClass('disabled');
+            $spinner.addClass('hidden');
+
+            if (response.success) {
+                if (response.titles && response.titles.length) {
+                    var $titles = $wrapper.find('#ci-title-suggestions').empty();
+                    response.titles.forEach(function(item) {
+                        var $row = $('<div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.6rem 0.75rem;">' +
+                            '<div style="flex:1; padding-right:1rem;"><strong>' + item.title + '</strong> <span style="font-size:11px; color:#64748b; margin-left:0.5rem;">(' + item.length + ' chars) - ' + (item.rationale || '') + '</span></div>' +
+                            '<div style="display:flex; gap:0.4rem;">' +
+                                '<button type="button" class="btn small ci-apply-title-btn" data-title="' + item.title.replace(/"/g, '&quot;') + '">' + Craft.t('content-intelligence', 'Apply to SEO Title') + '</button>' +
+                                '<button type="button" class="btn small ci-copy-btn" data-target="#temp-title-' + item.length + '">' + Craft.t('content-intelligence', 'Copy') + '</button>' +
+                                '<input type="hidden" id="temp-title-' + item.length + '" value="' + item.title.replace(/"/g, '&quot;') + '">' +
+                            '</div>' +
+                        '</div>');
+                        $titles.append($row);
+                    });
+                    $wrapper.find('#ci-title-suggestions-container').show();
+                } else if (target === 'description') {
+                    $wrapper.find('#ci-title-suggestions-container').hide();
+                }
+
+                if (response.descriptions && response.descriptions.length) {
+                    var $descs = $wrapper.find('#ci-desc-suggestions').empty();
+                    response.descriptions.forEach(function(item, idx) {
+                        var $row = $('<div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.6rem 0.75rem;">' +
+                            '<div style="flex:1; padding-right:1rem;">' + item.description + ' <span style="font-size:11px; color:#64748b;">(' + item.length + ' chars)</span></div>' +
+                            '<div style="display:flex; gap:0.4rem;">' +
+                                '<button type="button" class="btn small ci-apply-desc-btn" data-desc="' + item.description.replace(/"/g, '&quot;') + '">' + Craft.t('content-intelligence', 'Apply to Description') + '</button>' +
+                                '<button type="button" class="btn small ci-copy-btn" data-target="#temp-desc-' + idx + '">' + Craft.t('content-intelligence', 'Copy') + '</button>' +
+                                '<input type="hidden" id="temp-desc-' + idx + '" value="' + item.description.replace(/"/g, '&quot;') + '">' +
+                            '</div>' +
+                        '</div>');
+                        $descs.append($row);
+                    });
+                    $wrapper.find('#ci-desc-suggestions-container').show();
+                } else if (target === 'title') {
+                    $wrapper.find('#ci-desc-suggestions-container').hide();
+                }
+
+                $wrapper.find('#ci-meta-results').show();
+                Craft.cp.displayNotice(Craft.t('content-intelligence', 'Generated suggestions. Review and apply to your SEO fields.'));
+            } else {
+                Craft.cp.displayError(response.message || Craft.t('content-intelligence', 'Error generating meta tags'));
+            }
+        });
+    }
+
+    $wrapper.find('#ci-btn-gen-meta').off('click').on('click', function() { runMetaGeneration('both'); });
+    $wrapper.find('#ci-btn-gen-title-only').off('click').on('click', function() { runMetaGeneration('title'); });
+    $wrapper.find('#ci-btn-gen-desc-only').off('click').on('click', function() { runMetaGeneration('description'); });
+
     // Improve Content
-    $('#ci-btn-improve-content').on('click', function() {
+    $wrapper.find('#ci-btn-improve-content').off('click').on('click', function() {
         var $btn = $(this);
-        var $spinner = $('#ci-improve-spinner');
+        var $spinner = $wrapper.find('#ci-improve-spinner');
         $btn.addClass('disabled');
         $spinner.removeClass('hidden');
 
@@ -428,27 +643,27 @@
             siteId: siteId,
             title: entryTitle,
             content: entryBody,
-            tone: $('#ci-improve-tone').val(),
-            instructions: $('#ci-improve-instructions').val()
+            tone: $wrapper.find('#ci-improve-tone').val(),
+            instructions: $wrapper.find('#ci-improve-instructions').val()
         }, function(response) {
             $btn.removeClass('disabled');
             $spinner.addClass('hidden');
 
             if (response.success) {
-                var $list = $('#ci-improvements-list').empty();
+                var $list = $wrapper.find('#ci-improvements-list').empty();
                 (response.improvementsMade || []).forEach(function(imp) {
                     $list.append('<li>' + imp + '</li>');
                 });
 
-                $('#ci-original-text').val(entryBody);
-                $('#ci-improved-text').val(response.improvedContent);
+                $wrapper.find('#ci-original-text').val(entryBody);
+                $wrapper.find('#ci-improved-text').val(response.improvedContent);
 
                 if (response.diff) {
-                    $('#ci-orig-wc').text(response.diff.oldWordCount + ' words');
-                    $('#ci-sugg-wc').text(response.diff.newWordCount + ' words (' + (response.diff.wordDifference >= 0 ? '+' : '') + response.diff.wordDifference + ')');
+                    $wrapper.find('#ci-orig-wc').text(response.diff.oldWordCount + ' words');
+                    $wrapper.find('#ci-sugg-wc').text(response.diff.newWordCount + ' words (' + (response.diff.wordDifference >= 0 ? '+' : '') + response.diff.wordDifference + ')');
                 }
 
-                $('#ci-improve-results').show();
+                $wrapper.find('#ci-improve-results').show();
             } else {
                 Craft.cp.displayError(response.message || 'Error improving content');
             }
@@ -456,9 +671,9 @@
     });
 
     // Generate FAQs
-    $('#ci-btn-gen-faqs').on('click', function() {
+    $wrapper.find('#ci-btn-gen-faqs').off('click').on('click', function() {
         var $btn = $(this);
-        var $spinner = $('#ci-faqs-spinner');
+        var $spinner = $wrapper.find('#ci-faqs-spinner');
         $btn.addClass('disabled');
         $spinner.removeClass('hidden');
 
@@ -473,7 +688,7 @@
 
             if (response.success) {
                 faqsCache = response.faqs || [];
-                var $c = $('#ci-faqs-container').empty();
+                var $c = $wrapper.find('#ci-faqs-container').empty();
                 faqsCache.forEach(function(faq) {
                     var $item = $('<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:0.75rem;">' +
                         '<strong style="font-size:13px; color:#0f172a; display:block; margin-bottom:0.25rem;">Q: ' + faq.question + '</strong>' +
@@ -481,7 +696,7 @@
                     '</div>');
                     $c.append($item);
                 });
-                $('#ci-faqs-results').show();
+                $wrapper.find('#ci-faqs-results').show();
             } else {
                 Craft.cp.displayError(response.message || 'Error generating FAQs');
             }
@@ -489,7 +704,7 @@
     });
 
     // Copy FAQs
-    $('#ci-copy-faqs-md').on('click', function(e) {
+    $wrapper.find('#ci-copy-faqs-md').off('click').on('click', function(e) {
         e.preventDefault();
         var md = faqsCache.map(function(f) {
             return '### ' + f.question + '\n\n' + f.answer;
@@ -497,7 +712,7 @@
         ciCopyToClipboard(md, $(this));
     });
 
-    $('#ci-copy-faqs-schema').on('click', function(e) {
+    $wrapper.find('#ci-copy-faqs-schema').off('click').on('click', function(e) {
         e.preventDefault();
         var schema = {
             "@context": "https://schema.org",
@@ -517,9 +732,9 @@
     });
 
     // Generate Summary
-    $('#ci-btn-gen-summary').on('click', function() {
+    $wrapper.find('#ci-btn-gen-summary').off('click').on('click', function() {
         var $btn = $(this);
-        var $spinner = $('#ci-summary-spinner');
+        var $spinner = $wrapper.find('#ci-summary-spinner');
         $btn.addClass('disabled');
         $spinner.removeClass('hidden');
 
@@ -533,10 +748,10 @@
             $spinner.addClass('hidden');
 
             if (response.success && response.summary) {
-                $('#ci-summary-tldr').text(response.summary.tldr || '');
-                $('#ci-summary-exec').text(response.summary.executiveSummary || '');
-                $('#ci-summary-social').text(response.summary.socialSnippet || '');
-                $('#ci-summary-results').show();
+                $wrapper.find('#ci-summary-tldr').text(response.summary.tldr || '');
+                $wrapper.find('#ci-summary-exec').text(response.summary.executiveSummary || '');
+                $wrapper.find('#ci-summary-social').text(response.summary.socialSnippet || '');
+                $wrapper.find('#ci-summary-results').show();
             } else {
                 Craft.cp.displayError(response.message || 'Error generating summary');
             }
@@ -544,14 +759,14 @@
     });
 
     // Generate Alt Text
-    $(document).off('click.ci_alt').on('click.ci_alt', '.ci-btn-gen-img-alt', function() {
+    $wrapper.off('click.ci_alt').on('click.ci_alt', '.ci-btn-gen-img-alt', function() {
         var assetId = $(this).data('asset-id');
         var filename = $(this).data('filename');
         generateAltText(assetId, '', filename);
     });
 
-    $('#ci-btn-gen-custom-alt').on('click', function() {
-        var context = $('#ci-alt-custom-context').val();
+    $wrapper.find('#ci-btn-gen-custom-alt').off('click').on('click', function() {
+        var context = $wrapper.find('#ci-alt-custom-context').val();
         generateAltText(0, context, '');
     });
 
@@ -562,9 +777,9 @@
             filename: filename
         }, function(response) {
             if (response.success) {
-                $('#ci-alt-text-output').text(response.altText);
-                $('#ci-alt-explanation').text(response.explanation);
-                $('#ci-alt-results').show();
+                $wrapper.find('#ci-alt-text-output').text(response.altText);
+                $wrapper.find('#ci-alt-explanation').text(response.explanation);
+                $wrapper.find('#ci-alt-results').show();
             } else {
                 Craft.cp.displayError(response.message || 'Error generating alt text');
             }

@@ -10,4 +10,5 @@ class Table
     public const AUDITS = '{{%contentintelligence_audits}}';
     public const AUDIT_RESULTS = '{{%contentintelligence_audit_results}}';
     public const EMBEDDINGS = '{{%contentintelligence_embeddings}}';
+    public const SEO_METADATA = '{{%contentintelligence_seo_metadata}}';
 }

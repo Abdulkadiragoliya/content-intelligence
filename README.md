@@ -108,6 +108,78 @@ php craft content-intelligence/semantic/prune
 
 ## 🎨 Twig Template API
 
+## 🌐 Standalone SEO Metadata Management & Frontend Output
+
+Content Intelligence provides **production-ready SEO metadata management** even on fresh Craft CMS installations with **no other SEO plugins installed** (such as SEOmatic or Retour).
+
+### 📐 Understanding the Data Separation
+* **Craft Entry Title (`title`)**: The native Craft element title, typically rendered as the visible page heading (`<h1>`). Content Intelligence never silently modifies or overwrites this field.
+* **SEO Title (`seoTitle`)**: The value rendered into the HTML `<title>` tag.
+* **SEO Meta Description (`metaDescription`)**: The value rendered into `<meta name="description" content="...">`.
+* **Page Body & Custom Fields**: Visible body copy and custom fields remain completely independent.
+
+### 💾 Persistent Storage Model
+Metadata is saved to a dedicated database table (`{{%contentintelligence_seo_metadata}}`) associated with the specific `elementId` and `siteId`. Deleting an entry or site automatically cascades and cleans up associated metadata with zero orphaned data.
+
+### 🏷️ Frontend Output in Your Templates
+
+Place the standalone integration directly inside your layout template's `<head>`:
+
+```twig
+{# templates/_layout.twig #}
+<!DOCTYPE html>
+<html lang="{{ currentSite.language }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {# ================================================================= #}
+    {# Content Intelligence Standalone SEO Metadata Output              #}
+    {# ================================================================= #}
+    {{ craft.contentIntelligence.renderSeoMeta(entry) }}
+    {# Alternatively, use the shorthand Twig function: #}
+    {# {{ ciSeoMeta(entry) }} #}
+
+    <link rel="stylesheet" href="/assets/css/app.css">
+</head>
+<body>
+    <h1>{{ entry.title }}</h1>
+    <div class="content">{{ entry.body }}</div>
+</body>
+</html>
+```
+
+#### Rendered HTML Output:
+```html
+<title>Craft CMS Development Services | Example Company</title>
+<meta name="description" content="Discover expert Craft CMS development services for fast, scalable business websites.">
+```
+
+### 🎛️ Advanced / Custom Template Usage
+For headless setups or customized template layouts, use `getSeo()`:
+
+```twig
+{% set seo = craft.contentIntelligence.getSeo(entry) %}
+
+<title>{{ seo.renderedTitle }}</title>
+{% if seo.renderedDescription %}
+    <meta name="description" content="{{ seo.renderedDescription|e('html') }}">
+{% endif %}
+```
+
+### ⚙️ Fallback & Duplicate Tag Prevention
+* **Safe Fallbacks**: If no custom SEO title is defined, the renderer falls back to the Craft entry title with your site's brand name suffix. If no meta description is defined, it safely omits the tag without producing invalid or empty attributes.
+* **Deduplication**: Content Intelligence maintains a per-request rendering cache. If `renderSeoMeta()` is called multiple times across nested sub-templates, subsequent calls return an empty string to avoid duplicated `<title>` or `<meta>` tags.
+* **Zero External API Cost**: Frontend rendering performs a single indexed database lookup. It **never** invokes OpenAI or Qdrant during visitor page loads, ensuring sub-millisecond execution.
+* **Compatibility with Existing SEO Plugins**: If your project already uses SEOmatic or another SEO plugin for HTML head output, simply omit `craft.contentIntelligence.renderSeoMeta()` from your template to prevent duplicate tags. You can still use Content Intelligence in the Control Panel for AI-driven SEO audits and metadata suggestions.
+* **Search Engine Advisory**: Search engines (including Google) evaluate title tags and meta descriptions algorithmically and may choose to truncate or rewrite snippets based on user query intent.
+
+### 🌍 Multi-Site & Craft Cloud Compatibility
+* **Multi-Site Scoping**: Metadata is strictly scoped by `siteId`. An entry localized across multiple languages or domains maintains separate, isolated SEO titles and descriptions without cross-site leakage.
+* **Craft Cloud Agnostic**: Built with stateless, vendor-neutral database migrations compatible with both MySQL 8.0+ and PostgreSQL 13+ (AWS Aurora on Craft Cloud). No ephemeral container disk dependencies.
+
+---
+
 Access Content Intelligence metrics and recommendations directly in your frontend Twig templates:
 
 ### Entry Scores

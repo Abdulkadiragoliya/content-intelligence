@@ -5,6 +5,7 @@ namespace abdulkadiragoliya\contentintelligence\web\twig;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
+use craft\helpers\Template;
 use abdulkadiragoliya\contentintelligence\Plugin;
 
 /**
@@ -36,6 +37,8 @@ class ContentIntelligenceTwigExtension extends AbstractExtension
             new TwigFunction('ciHasAi', fn() => Plugin::getInstance()->hasAi()),
             new TwigFunction('ciHasVector', fn() => Plugin::getInstance()->hasVector()),
             new TwigFunction('ciHasRag', fn() => Plugin::getInstance()->hasRag()),
+            new TwigFunction('ciSeoMeta', fn($element = null, array $options = []) => Template::raw(Plugin::getInstance()->seoMetadata->renderHtml($element, null, $options)), ['is_safe' => ['html']]),
+            new TwigFunction('ciGetSeo', fn($element = null, array $options = []) => Plugin::getInstance()->seoMetadata->resolveMetadata($element, null, $options)),
         ];
     }
 

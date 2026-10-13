@@ -25,6 +25,15 @@ abstract class BaseSeoAuditRule extends BaseAuditRule
      */
     protected function resolveMetaTitle(Entry $entry): string
     {
+        // Check dedicated Content Intelligence SEO metadata first
+        try {
+            $lookupId = (int)($entry->canonicalId ?: $entry->id);
+            $saved = \abdulkadiragoliya\contentintelligence\Plugin::getInstance()->seoMetadata->getMetadata($lookupId, (int)$entry->siteId);
+            if ($saved && !empty(trim((string)$saved->seoTitle))) {
+                return trim((string)$saved->seoTitle);
+            }
+        } catch (\Throwable) {}
+
         $candidateHandles = ['seoTitle', 'metaTitle', 'titleTag', 'customTitle', 'ogTitle'];
 
         foreach ($candidateHandles as $handle) {
@@ -45,6 +54,15 @@ abstract class BaseSeoAuditRule extends BaseAuditRule
      */
     protected function resolveMetaDescription(Entry $entry): string
     {
+        // Check dedicated Content Intelligence SEO metadata first
+        try {
+            $lookupId = (int)($entry->canonicalId ?: $entry->id);
+            $saved = \abdulkadiragoliya\contentintelligence\Plugin::getInstance()->seoMetadata->getMetadata($lookupId, (int)$entry->siteId);
+            if ($saved && !empty(trim((string)$saved->metaDescription))) {
+                return trim((string)$saved->metaDescription);
+            }
+        } catch (\Throwable) {}
+
         $candidateHandles = ['seoDescription', 'metaDescription', 'description', 'summary', 'excerpt', 'ogDescription'];
 
         foreach ($candidateHandles as $handle) {

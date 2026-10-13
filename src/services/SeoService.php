@@ -82,18 +82,30 @@ class SeoService extends Component
      */
     public function resolveSnippetPreview(Entry $entry): array
     {
-        $title = (string)$entry->title;
+        $siteId = (int)$entry->siteId;
+        $lookupId = (int)($entry->canonicalId ?: $entry->id);
+        $savedMeta = \abdulkadiragoliya\contentintelligence\Plugin::getInstance()->seoMetadata->getMetadata($lookupId, $siteId);
+
+        $title = ($savedMeta && !empty(trim((string)$savedMeta->seoTitle)))
+            ? trim((string)$savedMeta->seoTitle)
+            : (string)$entry->title;
+
         $url = $entry->getUrl() ?? ($entry->getSite()->baseUrl . $entry->slug);
 
-        // Resolve description from field layout
-        $desc = '';
-        $candidateHandles = ['seoDescription', 'metaDescription', 'description', 'summary', 'excerpt'];
-        foreach ($candidateHandles as $handle) {
-            if ($entry->getFieldLayout()?->getFieldByHandle($handle)) {
-                $val = (string)$entry->getFieldValue($handle);
-                if (!empty(trim($val))) {
-                    $desc = trim(strip_tags($val));
-                    break;
+        // Resolve description: check saved standalone metadata first
+        $desc = ($savedMeta && !empty(trim((string)$savedMeta->metaDescription)))
+            ? trim((string)$savedMeta->metaDescription)
+            : '';
+
+        if (empty($desc)) {
+            $candidateHandles = ['seoDescription', 'metaDescription', 'description', 'summary', 'excerpt'];
+            foreach ($candidateHandles as $handle) {
+                if ($entry->getFieldLayout()?->getFieldByHandle($handle)) {
+                    $val = (string)$entry->getFieldValue($handle);
+                    if (!empty(trim($val))) {
+                        $desc = trim(strip_tags($val));
+                        break;
+                    }
                 }
             }
         }

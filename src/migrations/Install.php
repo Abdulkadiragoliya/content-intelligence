@@ -27,6 +27,7 @@ class Install extends Migration
      */
     public function safeDown(): bool
     {
+        $this->dropTableIfExists(Table::SEO_METADATA);
         $this->dropTableIfExists(Table::EMBEDDINGS);
         $this->dropTableIfExists(Table::AUDIT_RESULTS);
         $this->dropTableIfExists(Table::AUDITS);
@@ -93,6 +94,20 @@ class Install extends Migration
                 'uid' => $this->uid(),
             ]);
         }
+        // 4. SEO Metadata Table
+        if (!$this->db->tableExists(Table::SEO_METADATA)) {
+            $this->createTable(Table::SEO_METADATA, [
+                'id' => $this->primaryKey(),
+                'siteId' => $this->integer()->notNull(),
+                'elementId' => $this->integer()->notNull(),
+                'seoTitle' => $this->string(255)->null(),
+                'metaDescription' => $this->text()->null(),
+                'isAiGenerated' => $this->boolean()->notNull()->defaultValue(false),
+                'dateCreated' => $this->dateTime()->notNull(),
+                'dateUpdated' => $this->dateTime()->notNull(),
+                'uid' => $this->uid(),
+            ]);
+        }
     }
 
     /**
@@ -111,6 +126,9 @@ class Install extends Migration
 
         $this->createIndex(null, Table::EMBEDDINGS, ['siteId', 'entryId', 'chunkIndex'], true);
         $this->createIndex(null, Table::EMBEDDINGS, ['contentHash']);
+
+        $this->createIndex(null, Table::SEO_METADATA, ['siteId', 'elementId'], true);
+        $this->createIndex(null, Table::SEO_METADATA, ['elementId']);
     }
 
     /**
@@ -172,6 +190,26 @@ class Install extends Migration
             null,
             Table::EMBEDDINGS,
             'entryId',
+            '{{%elements}}',
+            'id',
+            'CASCADE',
+            'CASCADE'
+        );
+
+        $this->addForeignKey(
+            null,
+            Table::SEO_METADATA,
+            'siteId',
+            '{{%sites}}',
+            'id',
+            'CASCADE',
+            'CASCADE'
+        );
+
+        $this->addForeignKey(
+            null,
+            Table::SEO_METADATA,
+            'elementId',
             '{{%elements}}',
             'id',
             'CASCADE',

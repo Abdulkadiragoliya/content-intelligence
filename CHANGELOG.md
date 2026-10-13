@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-10-13
+
+### Added
+- **Standalone SEO Metadata Management**: Full, production-ready SEO metadata management without requiring SEOmatic, Retour, or any third-party SEO plugin.
+- **Dedicated Persistent Storage**: Added `{{%contentintelligence_seo_metadata}}` table (`m261013_000000_create_seo_metadata_table` and `Install.php`) to store approved SEO titles and meta descriptions with foreign keys cascading on element and site deletion.
+- **Craft Cloud & Multisite Support**: Fully agnostic database schema (PostgreSQL & MySQL) adhering to Craft Cloud ephemeral container guidelines. Strict site isolation ensures metadata on one site never leaks to another site.
+- **Independent Content Architecture**: Clearly decouples the visible Craft entry title (H1) and body fields from the SEO `<title>` and `<meta name="description">`. AI generation or manual edits never overwrite the entry title or page content.
+- **Entry Editor Slideout Integration**: Redesigned SEO Meta tab featuring live character counters (Title: 30–60 chars, Description: 120–160 chars), advisory status indicators, current saved values indicator, and non-destructive "Apply" / "Save Approved SEO Metadata" actions.
+- **Entry Editor Sidebar Badge**: Quick status indicators showing whether an SEO title and description are set for the active site, plus a "Manage SEO Metadata" button available across all editions (Lite, Pro, Plus).
+- **Targeted AI Generation**: One-click actions to generate both, title only, or description only with full preview and approval workflow before database persistence.
+- **Frontend Twig Output**:
+  - `{{ craft.contentIntelligence.renderSeoMeta(entry) }}` and `{{ ciSeoMeta(entry) }}`: Emits valid, HTML-escaped `<title>` and `<meta name="description">` tags.
+  - `{{ craft.contentIntelligence.getSeo(entry) }}`: Returns structured metadata array for custom or headless templates.
+  - Request-level deduplication cache to prevent duplicate tags when called multiple times in templates.
+  - Graceful fallback handling: falls back to entry title when no custom SEO title is defined; omits empty tags.
+  - Zero external API dependencies during frontend requests (0 OpenAI or Qdrant calls).
+- **Comprehensive Automated Test Suite**: Expanded automated test suite to 45 passing tests across storage, frontend HTML output, non-destructive AI generation, multisite isolation, Craft Cloud detection, and edition enforcement.
+
+### Fixed
+- **Twig Auto-escaping for HTML Output**: Wrapped `renderSeoMeta()` and `ciSeoMeta()` in `\craft\helpers\Template::raw()` (`\Twig\Markup`) so `<title>` and `<meta name="description">` tags render as live, raw HTML without requiring manual `|raw` filters.
+- **Slideout Modal Scrolling**: Added `overflow-y: auto !important;` to `.ci-slideout-container` and bounded viewport height (`max-height: calc(100vh - 48px);`) with bottom padding to ensure the AI generation section and all suggestion items can be scrolled into view smoothly.
+- **Slideout DOM Collision & Pre-selected Tabs**: Ensured existing slideouts in the DOM are destroyed before opening a new slideout, scoped all jQuery lookups to the active wrapper instance, and added server-side active tab evaluation (`initialTab`) to prevent blank tabs.
+- **Defensive Database Queries**: Wrapped `getMetadata()` in a try/catch block with fallback to `null` to prevent CP 500 errors if tables or schema migrations are in transition.
+
 ## [1.0.5] - 2026-10-11
 
 ### Fixed

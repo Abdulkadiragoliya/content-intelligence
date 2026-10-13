@@ -171,4 +171,141 @@ class SeoController extends Controller
         $this->setSuccessFlash(Craft::t('content-intelligence', 'SEO audit queued for site.'));
         return $this->redirect('content-intelligence/seo?site=' . $site->handle);
     }
+
+    /**
+     * AJAX action to retrieve saved standalone SEO metadata for an element.
+     */
+    public function actionGetMetadata(): Response
+    {
+        $this->requireAcceptsJson();
+
+        $user = Craft::$app->getUser();
+        if ($user->getIsGuest()) {
+            throw new \yii\web\ForbiddenHttpException('Login required.');
+        }
+
+        $elementId = (int)$this->request->getParam('elementId');
+        $siteId = (int)$this->request->getParam('siteId') ?: Craft::$app->getSites()->getCurrentSite()->id;
+
+        if (!$elementId) {
+            return $this->asJson([
+                'success' => false,
+                'message' => 'Element ID is required.',
+            ]);
+        }
+
+        $element = Craft::$app->getElements()->getElementById($elementId, null, $siteId);
+        if (!$element) {
+            return $this->asJson([
+                'success' => false,
+                'message' => "Element #{$elementId} not found.",
+            ]);
+        }
+
+        $lookupId = (int)($element->canonicalId ?: $element->id);
+        $record = Plugin::getInstance()->seoMetadata->getMetadata($lookupId, $siteId);
+
+        return $this->asJson([
+            'success' => true,
+            'metadata' => [
+                'elementId' => $element->id,
+                'canonicalId' => $lookupId,
+                'siteId' => $siteId,
+                'seoTitle' => $record?->seoTitle ?? '',
+                'metaDescription' => $record?->metaDescription ?? '',
+                'isAiGenerated' => (bool)($record?->isAiGenerated ?? false),
+                'dateUpdated' => $record?->dateUpdated ?? null,
+            ],
+        ]);
+    }
+
+    /**
+     * AJAX action to persistently save approved standalone SEO metadata for an element.
+     */
+    public function actionSaveMetadata(): Response
+    {
+        $this->requirePostRequest();
+        $this->requireAcceptsJson();
+
+        $user = Craft::$app->getUser();
+        if ($user->getIsGuest()) {
+            throw new \yii\web\ForbiddenHttpException('Login required.');
+        }
+
+        $elementId = (int)$this->request->getBodyParam('elementId');
+        $siteId = (int)$this->request->getBodyParam('siteId') ?: Craft::$app->getSites()->getCurrentSite()->id;
+        $seoTitle = (string)$this->request->getBodyParam('seoTitle', '');
+        $metaDescription = (string)$this->request->getBodyParam('metaDescription', '');
+        $isAiGenerated = (bool)$this->request->getBodyParam('isAiGenerated', false);
+
+        if (!$elementId) {
+            return $this->asJson([
+                'success' => false,
+                'message' => 'Element ID is required.',
+            ]);
+        }
+
+        $element = Craft::$app->getElements()->getElementById($elementId, null, $siteId);
+        if (!$element) {
+            return $this->asJson([
+                'success' => false,
+                'message' => "Element #{$elementId} not found.",
+            ]);
+        }
+
+        // Authorization check for entry editing
+        if ($element instanceof Entry && !empty($element->sectionId)) {
+            if (!$user->getIsAdmin() && !$user->checkPermission('editEntries:' . $element->sectionId)) {
+                throw new \yii\web\ForbiddenHttpException('You do not have permission to edit entries in this section.');
+            }
+        }
+
+        // Validate title length limit
+        if (mb_strlen($seoTitle) > 255) {
+            return $this->asJson([
+                'success' => false,
+                'message' => 'SEO Title exceeds maximum database limit of 255 characters.',
+            ]);
+        }
+
+        try {
+            $lookupId = (int)($element->canonicalId ?: $element->id);
+            $record = Plugin::getInstance()->seoMetadata->saveMetadata(
+                $lookupId,
+                $siteId,
+                $seoTitle,
+                $metaDescription,
+                $isAiGenerated
+            );
+
+            // If it's an Entry, update audit so SEO scores reflect the newly saved metadata
+            if ($element instanceof Entry && empty($element->getIsRevision())) {
+                try {
+                    Plugin::getInstance()->audit->auditEntry($element);
+                } catch (\Throwable $e) {
+                    Craft::warning("Re-audit on SEO metadata save failed: {$e->getMessage()}", __METHOD__);
+                }
+            }
+
+            return $this->asJson([
+                'success' => true,
+                'message' => Craft::t('content-intelligence', 'SEO metadata saved successfully.'),
+                'metadata' => [
+                    'elementId' => $element->id,
+                    'canonicalId' => $lookupId,
+                    'siteId' => $siteId,
+                    'seoTitle' => $record->seoTitle ?? '',
+                    'metaDescription' => $record->metaDescription ?? '',
+                    'isAiGenerated' => (bool)$record->isAiGenerated,
+                    'dateUpdated' => $record->dateUpdated,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            Craft::error("Save SEO Metadata Error: {$e->getMessage()}", __METHOD__);
+            return $this->asJson([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
 }
