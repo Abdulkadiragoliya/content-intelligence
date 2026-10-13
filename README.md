@@ -153,6 +153,35 @@ Place the standalone integration directly inside your layout template's `<head>`
 ```html
 <title>Craft CMS Development Services | Example Company</title>
 <meta name="description" content="Discover expert Craft CMS development services for fast, scalable business websites.">
+<link rel="canonical" href="https://example.com/services/craft-cms">
+<meta property="og:title" content="Craft CMS Development Services | Example Company">
+<meta property="og:description" content="Discover expert Craft CMS development services for fast, scalable business websites.">
+<meta property="og:url" content="https://example.com/services/craft-cms">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Example Company">
+<meta property="og:image" content="https://example.com/assets/og-share.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Craft CMS Development Services | Example Company">
+<meta name="twitter:description" content="Discover expert Craft CMS development services for fast, scalable business websites.">
+<meta name="twitter:image" content="https://example.com/assets/og-share.jpg">
+```
+
+### ⚙️ Template Options & Control Panel Settings
+You can customize or toggle tags globally in **Settings → Plugins → Content Intelligence** under **"Frontend SEO & Social Tags Output"**:
+* **Output Canonical Link Tag** (Lightswitch, default: `true`)
+* **Output OpenGraph Tags** (Lightswitch, default: `true`)
+* **Output Twitter Card Tags** (Lightswitch, default: `true`)
+* **Twitter Card Type** (`summary_large_image` or `summary`)
+
+Or override per template call:
+```twig
+{{ ciSeoMeta(entry, {
+    canonical: true,
+    og: true,
+    twitter: true,
+    ogImage: entry.featuredImage.one().getUrl() ?? '',
+    canonicalUrl: 'https://example.com/custom-canonical'
+}) }}
 ```
 
 ### 🎛️ Advanced / Custom Template Usage
@@ -163,7 +192,10 @@ For headless setups or customized template layouts, use `getSeo()`:
 
 <title>{{ seo.renderedTitle }}</title>
 {% if seo.renderedDescription %}
-    <meta name="description" content="{{ seo.renderedDescription|e('html') }}">
+    <meta name="description" content="{{ seo.renderedDescription|e('html_attr') }}">
+{% endif %}
+{% if seo.canonicalUrl %}
+    <link rel="canonical" href="{{ seo.canonicalUrl }}">
 {% endif %}
 ```
 

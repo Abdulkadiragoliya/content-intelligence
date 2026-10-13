@@ -22,10 +22,18 @@ class SeoMetadataFrontendTest extends TestCase
 
         $title = $data['seoTitle'] ?? ($data['entryTitle'] ?? '');
         $description = $data['metaDescription'] ?? ($options['fallbackDescription'] ?? '');
+        $canonicalUrl = $data['canonicalUrl'] ?? ($options['canonicalUrl'] ?? '');
+        $ogImage = $data['ogImage'] ?? ($options['ogImage'] ?? '');
+        $siteName = $data['siteName'] ?? 'Craft CMS Site';
 
-        if (empty($title) && empty($description)) {
+        if (empty($title) && empty($description) && empty($canonicalUrl)) {
             return '';
         }
+
+        $shouldCanonical = $options['canonical'] ?? true;
+        $shouldOg = $options['og'] ?? ($options['openGraph'] ?? true);
+        $shouldTwitter = $options['twitter'] ?? true;
+        $twitterCard = $options['twitterCard'] ?? 'summary_large_image';
 
         $htmlParts = [];
         if (!empty($title)) {
@@ -36,6 +44,50 @@ class SeoMetadataFrontendTest extends TestCase
         if (!empty($description)) {
             $escapedDesc = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
             $htmlParts[] = "<meta name=\"description\" content=\"{$escapedDesc}\">";
+        }
+
+        if ($shouldCanonical && !empty($canonicalUrl)) {
+            $escapedUrl = htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8');
+            $htmlParts[] = "<link rel=\"canonical\" href=\"{$escapedUrl}\">";
+        }
+
+        if ($shouldOg) {
+            if (!empty($title)) {
+                $escapedTitle = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
+                $htmlParts[] = "<meta property=\"og:title\" content=\"{$escapedTitle}\">";
+            }
+            if (!empty($description)) {
+                $escapedDesc = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
+                $htmlParts[] = "<meta property=\"og:description\" content=\"{$escapedDesc}\">";
+            }
+            if (!empty($canonicalUrl)) {
+                $escapedUrl = htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8');
+                $htmlParts[] = "<meta property=\"og:url\" content=\"{$escapedUrl}\">";
+            }
+            $htmlParts[] = "<meta property=\"og:type\" content=\"website\">";
+            $escapedSite = htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8');
+            $htmlParts[] = "<meta property=\"og:site_name\" content=\"{$escapedSite}\">";
+            if (!empty($ogImage)) {
+                $escapedImg = htmlspecialchars($ogImage, ENT_QUOTES, 'UTF-8');
+                $htmlParts[] = "<meta property=\"og:image\" content=\"{$escapedImg}\">";
+            }
+        }
+
+        if ($shouldTwitter) {
+            $escapedCard = htmlspecialchars($twitterCard, ENT_QUOTES, 'UTF-8');
+            $htmlParts[] = "<meta name=\"twitter:card\" content=\"{$escapedCard}\">";
+            if (!empty($title)) {
+                $escapedTitle = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
+                $htmlParts[] = "<meta name=\"twitter:title\" content=\"{$escapedTitle}\">";
+            }
+            if (!empty($description)) {
+                $escapedDesc = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
+                $htmlParts[] = "<meta name=\"twitter:description\" content=\"{$escapedDesc}\">";
+            }
+            if (!empty($ogImage)) {
+                $escapedImg = htmlspecialchars($ogImage, ENT_QUOTES, 'UTF-8');
+                $htmlParts[] = "<meta name=\"twitter:image\" content=\"{$escapedImg}\">";
+            }
         }
 
         $renderedCache[$renderKey] = true;
@@ -145,4 +197,42 @@ class SeoMetadataFrontendTest extends TestCase
         $this->assertStringContainsString('German Page Title | Marke', $htmlSite2);
         $this->assertStringNotContainsString('English Page Title', $htmlSite2);
     }
+
+    public function testRendersCanonicalAndSocialTags(): void
+    {
+        $cache = [];
+        $data = [
+            'elementId' => 20,
+            'siteId' => 1,
+            'siteName' => 'Surrey Steels',
+            'seoTitle' => 'Expert Steel Fabrication | Surrey Steels',
+            'metaDescription' => 'Leading structural steel and architectural metalwork experts.',
+            'canonicalUrl' => 'https://surreysteels.co.uk/services/fabrication',
+            'ogImage' => 'https://surreysteels.co.uk/assets/og-fabrication.jpg',
+        ];
+
+        $html = $this->render($data, [], $cache);
+
+        // Standard tags
+        $this->assertStringContainsString('<title>Expert Steel Fabrication | Surrey Steels</title>', $html);
+        $this->assertStringContainsString('<meta name="description" content="Leading structural steel and architectural metalwork experts.">', $html);
+
+        // Canonical link
+        $this->assertStringContainsString('<link rel="canonical" href="https://surreysteels.co.uk/services/fabrication">', $html);
+
+        // OpenGraph tags
+        $this->assertStringContainsString('<meta property="og:title" content="Expert Steel Fabrication | Surrey Steels">', $html);
+        $this->assertStringContainsString('<meta property="og:description" content="Leading structural steel and architectural metalwork experts.">', $html);
+        $this->assertStringContainsString('<meta property="og:url" content="https://surreysteels.co.uk/services/fabrication">', $html);
+        $this->assertStringContainsString('<meta property="og:type" content="website">', $html);
+        $this->assertStringContainsString('<meta property="og:site_name" content="Surrey Steels">', $html);
+        $this->assertStringContainsString('<meta property="og:image" content="https://surreysteels.co.uk/assets/og-fabrication.jpg">', $html);
+
+        // Twitter Card tags
+        $this->assertStringContainsString('<meta name="twitter:card" content="summary_large_image">', $html);
+        $this->assertStringContainsString('<meta name="twitter:title" content="Expert Steel Fabrication | Surrey Steels">', $html);
+        $this->assertStringContainsString('<meta name="twitter:description" content="Leading structural steel and architectural metalwork experts.">', $html);
+        $this->assertStringContainsString('<meta name="twitter:image" content="https://surreysteels.co.uk/assets/og-fabrication.jpg">', $html);
+    }
 }
+

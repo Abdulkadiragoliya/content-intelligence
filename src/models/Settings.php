@@ -21,6 +21,12 @@ class Settings extends Model
     public int $minDescriptionLength = 70;
     public int $maxDescriptionLength = 160;
 
+    // Frontend SEO & Social Tag Output Settings
+    public bool $renderCanonical = true;
+    public bool $renderOpenGraph = true;
+    public bool $renderTwitterCard = true;
+    public string $twitterCardType = 'summary_large_image';
+
     // AI Settings (Pro & Plus)
     public string $aiProvider = 'openai';
     public string $openaiApiKey = '';
@@ -46,8 +52,8 @@ class Settings extends Model
     {
         return [
             [['minContentWordCount', 'staleContentDays', 'minTitleLength', 'maxTitleLength', 'minDescriptionLength', 'maxDescriptionLength', 'chunkSize', 'chunkOverlap'], 'integer'],
-            [['enableAutoAuditOnSave'], 'boolean'],
-            [['aiProvider', 'openaiApiKey', 'openaiModel', 'vectorStore', 'qdrantUrl', 'qdrantApiKey', 'qdrantCollection', 'embeddingModel'], 'string'],
+            [['enableAutoAuditOnSave', 'renderCanonical', 'renderOpenGraph', 'renderTwitterCard'], 'boolean'],
+            [['aiProvider', 'openaiApiKey', 'openaiModel', 'vectorStore', 'qdrantUrl', 'qdrantApiKey', 'qdrantCollection', 'embeddingModel', 'twitterCardType'], 'string'],
             [['temperature'], 'number', 'min' => 0.0, 'max' => 1.0],
             [['siteSettings'], 'safe'],
         ];
@@ -66,6 +72,10 @@ class Settings extends Model
             'maxTitleLength' => 60,
             'minDescriptionLength' => 70,
             'maxDescriptionLength' => 160,
+            'renderCanonical' => true,
+            'renderOpenGraph' => true,
+            'renderTwitterCard' => true,
+            'twitterCardType' => 'summary_large_image',
             'aiProvider' => 'openai',
             'openaiApiKey' => '',
             'openaiModel' => 'gpt-4o-mini',

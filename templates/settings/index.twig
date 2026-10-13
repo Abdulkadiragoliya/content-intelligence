@@ -98,6 +98,54 @@
 
     <div class="ci-panel">
         <div class="ci-panel-header">
+            <h2>{{ "Frontend SEO & Social Tags Output"|t('content-intelligence') }} <span style="font-size: 0.85rem; font-weight: normal; color: #64748b; margin-left: 0.5rem;">({{ activeSite.name }})</span></h2>
+            <span class="ci-edition-badge ci-badge-lite">{{ "Lite / Plus / Pro"|t('content-intelligence') }}</span>
+        </div>
+        <div class="ci-panel-body">
+            <p style="margin-bottom: 1.25rem; color: #64748b; font-size: 0.9rem;">
+                {{ "Controls the HTML tags rendered when calling {{ craft.contentIntelligence.renderSeoMeta(entry) }} or {{ ciSeoMeta(entry) }} in your frontend templates."|t('content-intelligence') }}
+            </p>
+
+            {{ forms.lightswitchField({
+                label: "Output Canonical Link Tag"|t('content-intelligence'),
+                instructions: "Automatically outputs <link rel=\"canonical\" href=\"...\"> matching the entry's canonical public URL."|t('content-intelligence'),
+                id: 'renderCanonical',
+                name: 'settings[renderCanonical]',
+                on: settings.getForSite('renderCanonical', activeSite.id)
+            }) }}
+
+            {{ forms.lightswitchField({
+                label: "Output OpenGraph Tags (Facebook & LinkedIn)"|t('content-intelligence'),
+                instructions: "Renders og:title, og:description, og:url, og:type, and og:site_name."|t('content-intelligence'),
+                id: 'renderOpenGraph',
+                name: 'settings[renderOpenGraph]',
+                on: settings.getForSite('renderOpenGraph', activeSite.id)
+            }) }}
+
+            {{ forms.lightswitchField({
+                label: "Output Twitter Card Tags"|t('content-intelligence'),
+                instructions: "Renders twitter:card, twitter:title, and twitter:description."|t('content-intelligence'),
+                id: 'renderTwitterCard',
+                name: 'settings[renderTwitterCard]',
+                on: settings.getForSite('renderTwitterCard', activeSite.id)
+            }) }}
+
+            {{ forms.selectField({
+                label: "Twitter Card Type"|t('content-intelligence'),
+                instructions: "The display format for Twitter preview cards."|t('content-intelligence'),
+                id: 'twitterCardType',
+                name: 'settings[twitterCardType]',
+                value: settings.getForSite('twitterCardType', activeSite.id),
+                options: [
+                    { label: 'summary_large_image (Large preview card)', value: 'summary_large_image' },
+                    { label: 'summary (Compact thumbnail card)', value: 'summary' }
+                ]
+            }) }}
+        </div>
+    </div>
+
+    <div class="ci-panel">
+        <div class="ci-panel-header">
             <h2>{{ "AI Configuration (BYOK)"|t('content-intelligence') }} <span style="font-size: 0.85rem; font-weight: normal; color: #64748b; margin-left: 0.5rem;">({{ activeSite.name }})</span></h2>
             <span class="ci-edition-badge ci-badge-plus">{{ "Plus & Pro"|t('content-intelligence') }}</span>
         </div>

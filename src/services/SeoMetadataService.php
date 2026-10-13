@@ -173,19 +173,50 @@ class SeoMetadataService extends Component
             }
         }
 
-        // Description resolution and fallback
-        $description = $savedDescription;
-        if (empty($description) && !empty($options['fallbackDescription'])) {
-            $description = trim((string)$options['fallbackDescription']);
+        // Canonical URL
+        $canonicalUrl = '';
+        if (!empty($options['canonicalUrl'])) {
+            $canonicalUrl = trim((string)$options['canonicalUrl']);
+        } elseif ($resolvedElement && method_exists($resolvedElement, 'getUrl')) {
+            $canonicalUrl = (string)$resolvedElement->getUrl();
         }
+
+        // Optional image resolution (options override or element asset inspection)
+        $ogImage = !empty($options['ogImage']) ? trim((string)$options['ogImage']) : '';
+        if (empty($ogImage) && $resolvedElement) {
+            foreach (['seoImage', 'ogImage', 'featuredImage', 'featureImage', 'image'] as $fieldHandle) {
+                try {
+                    if (isset($resolvedElement->$fieldHandle)) {
+                        $val = $resolvedElement->$fieldHandle;
+                        if ($val instanceof \craft\elements\db\AssetQuery) {
+                            $asset = $val->one();
+                            if ($asset && method_exists($asset, 'getUrl')) {
+                                $ogImage = (string)$asset->getUrl();
+                                break;
+                            }
+                        }
+                    }
+                } catch (\Throwable) {
+                    // Ignore missing field exceptions
+                }
+            }
+        }
+
+        $robots = !empty($options['robots']) ? trim((string)$options['robots']) : '';
+        $ogType = !empty($options['ogType']) ? trim((string)$options['ogType']) : 'website';
 
         return [
             'elementId' => $resolvedElement?->id,
             'siteId' => $siteId,
+            'siteName' => $siteName,
             'seoTitle' => $savedTitle ?: null,
             'metaDescription' => $savedDescription ?: null,
             'renderedTitle' => $title,
             'renderedDescription' => $description,
+            'canonicalUrl' => $canonicalUrl ?: null,
+            'ogImage' => $ogImage ?: null,
+            'ogType' => $ogType,
+            'robots' => $robots ?: null,
             'isCustom' => !empty($savedTitle) || !empty($savedDescription),
             'isAiGenerated' => (bool)($record?->isAiGenerated ?? false),
             'dateUpdated' => $record?->dateUpdated ?? null,
@@ -193,12 +224,20 @@ class SeoMetadataService extends Component
     }
 
     /**
-     * Renders standard standalone HTML SEO <title> and <meta name="description"> tags.
+     * Renders standard standalone HTML SEO <title>, <meta name="description">, <link rel="canonical">,
+     * OpenGraph tags, and Twitter Cards.
      * Prevents duplicate tag output within the same request and properly escapes HTML attributes.
      *
-     * @param Element|int|null $element
+     * @param mixed $element
      * @param int|null $siteId
      * @param array $options Configuration options:
+     *   - 'canonical' (bool): Toggle canonical link rendering (defaults to plugin setting)
+     *   - 'og' / 'openGraph' (bool): Toggle OpenGraph tags rendering (defaults to plugin setting)
+     *   - 'twitter' (bool): Toggle Twitter card tags rendering (defaults to plugin setting)
+     *   - 'twitterCard' (string): Twitter card type ('summary_large_image' or 'summary')
+     *   - 'canonicalUrl' (string): Custom canonical URL override
+     *   - 'ogImage' (string): Custom social share image URL
+     *   - 'robots' (string): Custom robots directives (e.g. 'noindex, follow')
      *   - 'force' (bool): Force re-rendering even if already rendered this request
      *   - 'fallbackTitle' (string): Custom fallback title
      *   - 'fallbackDescription' (string): Custom fallback description
@@ -220,21 +259,88 @@ class SeoMetadataService extends Component
         $meta = $this->resolveMetadata($resolvedElement, $siteId, $options);
         $title = $meta['renderedTitle'];
         $description = $meta['renderedDescription'];
+        $canonicalUrl = $meta['canonicalUrl'];
+        $siteName = $meta['siteName'];
+        $ogImage = $meta['ogImage'];
 
-        if (empty($title) && empty($description)) {
+        if (empty($title) && empty($description) && empty($canonicalUrl)) {
             return '';
         }
 
+        $settings = \abdulkadiragoliya\contentintelligence\Plugin::getInstance()?->getSettings();
+        $shouldCanonical = isset($options['canonical']) ? (bool)$options['canonical'] : (bool)($settings?->getForSite('renderCanonical', $siteId) ?? true);
+        $shouldOg = isset($options['og']) ? (bool)$options['og'] : (isset($options['openGraph']) ? (bool)$options['openGraph'] : (bool)($settings?->getForSite('renderOpenGraph', $siteId) ?? true));
+        $shouldTwitter = isset($options['twitter']) ? (bool)$options['twitter'] : (bool)($settings?->getForSite('renderTwitterCard', $siteId) ?? true);
+        $twitterCard = !empty($options['twitterCard']) ? (string)$options['twitterCard'] : (string)($settings?->getForSite('twitterCardType', $siteId) ?? 'summary_large_image');
+
         $htmlParts = [];
 
+        // <title>
         if (!empty($title)) {
             $escapedTitle = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
             $htmlParts[] = "<title>{$escapedTitle}</title>";
         }
 
+        // <meta name="description">
         if (!empty($description)) {
             $escapedDesc = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
             $htmlParts[] = "<meta name=\"description\" content=\"{$escapedDesc}\">";
+        }
+
+        // <link rel="canonical">
+        if ($shouldCanonical && !empty($canonicalUrl)) {
+            $escapedCanonical = htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8');
+            $htmlParts[] = "<link rel=\"canonical\" href=\"{$escapedCanonical}\">";
+        }
+
+        // OpenGraph
+        if ($shouldOg) {
+            if (!empty($title)) {
+                $escapedTitle = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
+                $htmlParts[] = "<meta property=\"og:title\" content=\"{$escapedTitle}\">";
+            }
+            if (!empty($description)) {
+                $escapedDesc = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
+                $htmlParts[] = "<meta property=\"og:description\" content=\"{$escapedDesc}\">";
+            }
+            if (!empty($canonicalUrl)) {
+                $escapedCanonical = htmlspecialchars($canonicalUrl, ENT_QUOTES, 'UTF-8');
+                $htmlParts[] = "<meta property=\"og:url\" content=\"{$escapedCanonical}\">";
+            }
+            $ogType = htmlspecialchars($meta['ogType'] ?: 'website', ENT_QUOTES, 'UTF-8');
+            $htmlParts[] = "<meta property=\"og:type\" content=\"{$ogType}\">";
+            if (!empty($siteName)) {
+                $escapedSiteName = htmlspecialchars($siteName, ENT_QUOTES, 'UTF-8');
+                $htmlParts[] = "<meta property=\"og:site_name\" content=\"{$escapedSiteName}\">";
+            }
+            if (!empty($ogImage)) {
+                $escapedImg = htmlspecialchars($ogImage, ENT_QUOTES, 'UTF-8');
+                $htmlParts[] = "<meta property=\"og:image\" content=\"{$escapedImg}\">";
+            }
+        }
+
+        // Twitter Card
+        if ($shouldTwitter) {
+            $escapedCard = htmlspecialchars($twitterCard, ENT_QUOTES, 'UTF-8');
+            $htmlParts[] = "<meta name=\"twitter:card\" content=\"{$escapedCard}\">";
+            if (!empty($title)) {
+                $escapedTitle = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
+                $htmlParts[] = "<meta name=\"twitter:title\" content=\"{$escapedTitle}\">";
+            }
+            if (!empty($description)) {
+                $escapedDesc = htmlspecialchars($description, ENT_QUOTES, 'UTF-8');
+                $htmlParts[] = "<meta name=\"twitter:description\" content=\"{$escapedDesc}\">";
+            }
+            if (!empty($ogImage)) {
+                $escapedImg = htmlspecialchars($ogImage, ENT_QUOTES, 'UTF-8');
+                $htmlParts[] = "<meta name=\"twitter:image\" content=\"{$escapedImg}\">";
+            }
+        }
+
+        // Robots
+        if (!empty($meta['robots'])) {
+            $escapedRobots = htmlspecialchars($meta['robots'], ENT_QUOTES, 'UTF-8');
+            $htmlParts[] = "<meta name=\"robots\" content=\"{$escapedRobots}\">";
         }
 
         self::$_rendered[$renderKey] = true;
