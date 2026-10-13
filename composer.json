@@ -1,6 +1,6 @@
 {
   "name": "abdulkadiragoliya/content-intelligence",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "AI-powered Content & SEO Intelligence for Craft CMS. Audits, scoring, semantic search, and RAG knowledge assistant.",
   "type": "craft-plugin",
   "keywords": [

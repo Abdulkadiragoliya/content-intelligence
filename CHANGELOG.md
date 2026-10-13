@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-10-13
+
+### Added
+- **Full Social & Canonical Meta Tag Output**:
+  - `renderSeoMeta()` and `ciSeoMeta()` now emit `<link rel="canonical">`, OpenGraph tags (`og:title`, `og:description`, `og:url`, `og:type`, `og:site_name`, `og:image`), and Twitter Card tags (`twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`).
+  - Automatic social share image resolution from entry asset fields (`featureImage`, `featuredImage`, `image`, `ogImage`).
+  - Added dedicated Control Panel switches under "Frontend SEO & Social Tags Output" to toggle Canonical link tags, OpenGraph tags, and Twitter Cards.
+  - Configurable Twitter card type (`summary_large_image` or `summary`).
+  - Template options override support (e.g. `{{ ciSeoMeta(entry, { canonical: true, og: true, twitter: true, ogImage: '...' }) }}`).
+- **Expanded Automated Test Suite**: Added `testRendersCanonicalAndSocialTags` with 46/46 passing unit tests.
+
 ## [1.1.0] - 2026-10-13
 
 ### Added
@@ -16,17 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Entry Editor Sidebar Badge**: Quick status indicators showing whether an SEO title and description are set for the active site, plus a "Manage SEO Metadata" button available across all editions (Lite, Pro, Plus).
 - **Targeted AI Generation**: One-click actions to generate both, title only, or description only with full preview and approval workflow before database persistence.
 - **Frontend Twig Output**:
-  - `{{ craft.contentIntelligence.renderSeoMeta(entry) }}` and `{{ ciSeoMeta(entry) }}`: Emits valid, HTML-escaped `<title>`, `<meta name="description">`, `<link rel="canonical">`, OpenGraph tags (`og:title`, `og:description`, `og:url`, `og:type`, `og:site_name`, `og:image`), and Twitter Card tags (`twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`).
-  - Automatic image detection for social share tags from entry asset fields (`featureImage`, `featuredImage`, `image`, `ogImage`).
+  - `{{ craft.contentIntelligence.renderSeoMeta(entry) }}` and `{{ ciSeoMeta(entry) }}`: Emits valid, HTML-escaped `<title>` and `<meta name="description">` tags.
   - `{{ craft.contentIntelligence.getSeo(entry) }}`: Returns structured metadata array for custom or headless templates.
   - Request-level deduplication cache to prevent duplicate tags when called multiple times in templates.
   - Graceful fallback handling: falls back to entry title when no custom SEO title is defined; omits empty tags.
   - Zero external API dependencies during frontend requests (0 OpenAI or Qdrant calls).
-- **CP Settings for Frontend SEO & Social Tags**:
-  - Added dedicated Control Panel settings switches under "Frontend SEO & Social Tags Output" to individually toggle Canonical link tags, OpenGraph tags, and Twitter Card tags.
-  - Configurable Twitter card type (`summary_large_image` or `summary`).
-  - Template options override support (e.g. `{{ ciSeoMeta(entry, { og: false, canonicalUrl: '...' }) }}`).
-- **Comprehensive Automated Test Suite**: Expanded automated test suite to 46 passing tests across storage, frontend HTML output, canonical/social tags rendering, non-destructive AI generation, multisite isolation, Craft Cloud detection, and edition enforcement.
+- **Comprehensive Automated Test Suite**: Expanded automated test suite across storage, frontend HTML output, non-destructive AI generation, multisite isolation, Craft Cloud detection, and edition enforcement.
 
 ### Fixed
 - **Twig Auto-escaping for HTML Output**: Wrapped `renderSeoMeta()` and `ciSeoMeta()` in `\craft\helpers\Template::raw()` (`\Twig\Markup`) so `<title>` and `<meta name="description">` tags render as live, raw HTML without requiring manual `|raw` filters.
